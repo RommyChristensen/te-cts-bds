@@ -1,5 +1,4 @@
 services:
-  # Node.js Web Service
   - type: web
     name: interactive-game-website
     runtime: node
@@ -8,8 +7,6 @@ services:
     startCommand: npm start
     healthCheckPath: /
     autoDeploy: true
-    
-    # Environment variables
     envVars:
       - key: NODE_ENV
         value: production
@@ -17,13 +14,7 @@ services:
         value: 10000
       - key: SESSION_SECRET
         generateValue: true
-        
-    # Directory configuration
     rootDir: ./
-    
-    # Performance settings
     scaling:
       minInstances: 1
       maxInstances: 1
-    
-    # PostgreSQL database will be added manually in Render dashboard

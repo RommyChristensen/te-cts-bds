@@ -1098,21 +1098,21 @@
                                     <td>${game.description}</td>
                                     <td>
                                         <div>
-                                            ${game.teams.map(team => `
-                                                <div>${team}: ${game.teamPlayers[team] || 0} players</div>
-                                            `).join('')}
+                                            ${game.teams && game.teams.length > 0 ? game.teams.map(team => `
+                                                <div>${team.team_name}: ${team.player_count || 0} players</div>
+                                            `).join('') : '<div>No teams configured</div>'}
                                         </div>
                                     </td>
-                                    <td>${game.duration} menit</td>
-                                    <td><span class="currency-display">${game.rewardCoins || 0}</span></td>
-                                    <td><code style="color: #c0c0c0; font-size: 0.8rem;">${game.gameUrl}</code></td>
+                                    <td>${game.duration || 5} menit</td>
+                                    <td><span class="currency-display">${game.reward_coins || 0}</span></td>
+                                    <td><code style="color: #c0c0c0; font-size: 0.8rem;">${game.game_url || `/game/${game.id}`}</code></td>
                                     <td><span class="status-badge status-${game.status}">${game.status}</span></td>
                                     <td>
                                         <div class="action-buttons">
                                             <button class="btn btn-sm btn-warning" onclick="editGame('${game.id}')">Edit</button>
                                             <button class="btn btn-sm btn-danger" onclick="deleteGame('${game.id}')">Delete</button>
                                             ${game.status !== 'active' ? `<button class="btn btn-sm btn-success" onclick="setActiveGame('${game.id}')">Set Active</button>` : ''}
-                                            ${game.status === 'active' ? `<button class="btn btn-sm btn-primary" onclick="viewGameRoom('${game.gameUrl}')">View Room</button>` : ''}
+                                            ${game.status === 'active' ? `<button class="btn btn-sm btn-primary" onclick="viewGameRoom('/game/${game.id}')">View Room</button>` : ''}
                                             ${game.status === 'active' ? `<button class="btn btn-sm btn-secondary" onclick="setInactiveGame('${game.id}')">Set Inactive</button>` : ''}
                                         </div>
                                     </td>
@@ -1329,22 +1329,24 @@
                     });
                     
                     // Set teams and player counts
-                    if (game.teams && game.teamPlayers) {
-                        game.teams.forEach(teamName => {
-                            const checkbox = document.querySelector(`input[name="teams"][value="${teamName}"]`);
+                    if (game.teams && game.teams.length > 0) {
+                        game.teams.forEach(team => {
+                            const checkbox = document.querySelector(`input[name="teams"][value="${team.team_name}"]`);
                             if (checkbox) {
                                 checkbox.checked = true;
-                                const playerInput = document.querySelector(`input[name="teamPlayers_${teamName}"]`);
+                                const playerInput = document.querySelector(`input[name="teamPlayers_${team.team_name}"]`);
                                 if (playerInput) {
-                                    playerInput.value = game.teamPlayers[teamName] || '';
+                                    playerInput.value = team.player_count || 0;
                                     playerInput.disabled = false;
                                 }
                             }
                         });
                     }
                     
-                    // Set game URL
-                    document.getElementById('gameUrl').value = game.gameUrl || '';
+                    // Set other fields
+                    document.getElementById('gameDuration').value = game.duration || 5;
+                    document.getElementById('rewardCoins').value = game.reward_coins || 0;
+                    document.getElementById('gameUrl').value = game.game_url || game.id || '';
                     
                     // Update help text for edit mode
                     document.getElementById('urlHelp').textContent = 'URL tidak dapat diubah saat edit game';
@@ -1384,15 +1386,20 @@
                 return;
             }
 
+            // Format teams for database
+            const formattedTeams = selectedTeams.map(teamName => ({
+                team_name: teamName,
+                player_count: teamPlayers[teamName] || 0
+            }));
+
             const gameData = {
                 name: document.getElementById('gameName').value,
                 description: document.getElementById('gameDescription').value,
                 duration: parseInt(document.getElementById('gameDuration').value),
-                teams: selectedTeams,
-                teamPlayers: teamPlayers,
-                rewardCoins: parseInt(document.getElementById('rewardCoins').value),
-                gameUrl: document.getElementById('gameUrl').value,
-                status: 'inactive'
+                reward_coins: parseInt(document.getElementById('rewardCoins').value),
+                game_url: document.getElementById('gameUrl').value,
+                status: 'inactive',
+                teams: formattedTeams
             };
 
             try {

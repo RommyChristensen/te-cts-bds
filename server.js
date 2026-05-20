@@ -5,6 +5,13 @@ const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
 
+// Database models
+const UserModel = require('./models/userModel');
+const AdminModel = require('./models/adminModel');
+const GameModel = require('./models/gameModel');
+const CurrencyModel = require('./models/currencyModel');
+const GameResultModel = require('./models/gameResultModel');
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
@@ -22,53 +29,9 @@ app.use(session({
   cookie: { secure: false }
 }));
 
-// Load data from JSON files
-let users = [];
-let admins = [];
-let games = [];
-let activeGame = null;
-let playerCurrency = {};
-
-// Load initial data
-function loadData() {
-  try {
-    if (fs.existsSync('data/users.json')) {
-      users = JSON.parse(fs.readFileSync('data/users.json', 'utf8'));
-    }
-    if (fs.existsSync('data/admins.json')) {
-      admins = JSON.parse(fs.readFileSync('data/admins.json', 'utf8'));
-    }
-    if (fs.existsSync('data/games.json')) {
-      games = JSON.parse(fs.readFileSync('data/games.json', 'utf8'));
-    }
-    if (fs.existsSync('data/currency.json')) {
-      playerCurrency = JSON.parse(fs.readFileSync('data/currency.json', 'utf8'));
-    }
-  } catch (error) {
-    console.error('Error loading data:', error);
-  }
-}
-
-// Save data to JSON files
-function saveData() {
-  try {
-    if (!fs.existsSync('data')) {
-      fs.mkdirSync('data');
-    }
-    fs.writeFileSync('data/users.json', JSON.stringify(users, null, 2));
-    fs.writeFileSync('data/admins.json', JSON.stringify(admins, null, 2));
-    fs.writeFileSync('data/games.json', JSON.stringify(games, null, 2));
-    fs.writeFileSync('data/currency.json', JSON.stringify(playerCurrency, null, 2));
-  } catch (error) {
-    console.error('Error saving data:', error);
-  }
-}
-
-// Initialize data
-loadData();
-
 // Game state
 let gamePlayers = new Map(); // Track players in current game
+let activeGame = null;
 
 // Routes
 app.get('/', (req, res) => {
@@ -115,271 +78,340 @@ app.get('/game/:gameName', (req, res) => {
 });
 
 // API Routes
-app.post('/login', (req, res) => {
-  const { username } = req.body;
-  const user = users.find(u => u.username === username);
-  
-  if (user) {
-    req.session.user = user;
-    res.json({ success: true, user: user });
-  } else {
-    res.json({ success: false, message: 'Username not found' });
-  }
-});
-
-app.post('/admin-login', (req, res) => {
-  const { username } = req.body;
-  const admin = admins.find(a => a.username === username);
-  
-  if (admin) {
-    req.session.admin = admin;
-    res.json({ success: true, admin: admin });
-  } else {
-    res.json({ success: false, message: 'Admin username not found' });
-  }
-});
-
-app.get('/api/standings', (req, res) => {
-  const activePlayers = users.filter(user => !user.eliminated);
-  const standings = activePlayers
-    .map(user => ({
-      ...user,
-      currency: playerCurrency[user.username] || 0
-    }))
-    .sort((a, b) => b.currency - a.currency);
-  res.json(standings);
-});
-
-app.get('/api/profile/:username', (req, res) => {
-  const username = req.params.username;
-  const user = users.find(u => u.username === username);
-  
-  if (user) {
-    res.json({
-      ...user,
-      currency: playerCurrency[username] || 0
-    });
-  } else {
-    res.status(404).json({ message: 'User not found' });
-  }
-});
-
-app.get('/api/user-info', (req, res) => {
-  // Allow both users and admins to access game pages
-  if (!req.session.user && !req.session.admin) {
-    return res.status(401).json({ message: 'Not authenticated' });
-  }
-  
-  // For users, return user info
-  if (req.session.user) {
-    const user = users.find(u => u.username === req.session.user.username);
+app.post('/login', async (req, res) => {
+  try {
+    const { username } = req.body;
+    const user = await UserModel.getByUsername(username);
     
     if (user) {
-      res.json({
-        ...user,
-        currency: playerCurrency[user.username] || 0
-      });
+      req.session.user = user;
+      res.json({ success: true, user: user });
+    } else {
+      res.json({ success: false, message: 'Username not found' });
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.post('/admin-login', async (req, res) => {
+  try {
+    const { username } = req.body;
+    const admin = await AdminModel.getByUsername(username);
+    
+    if (admin) {
+      req.session.admin = admin;
+      res.json({ success: true, admin: admin });
+    } else {
+      res.json({ success: false, message: 'Admin username not found' });
+    }
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.get('/api/standings', async (req, res) => {
+  try {
+    const standings = await UserModel.getActiveWithCurrency();
+    res.json(standings);
+  } catch (error) {
+    console.error('Standings error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/profile/:username', async (req, res) => {
+  try {
+    const username = req.params.username;
+    const user = await UserModel.getProfileWithCurrency(username);
+    
+    if (user) {
+      res.json(user);
     } else {
       res.status(404).json({ message: 'User not found' });
     }
-  } else if (req.session.admin) {
-    // For admins, return admin info to identify them
-    res.json({
-      username: req.session.admin.username,
-      nama: req.session.admin.nama,
-      isAdmin: true,
-      currency: 0
-    });
-  } else {
-    res.json(null);
+  } catch (error) {
+    console.error('Profile error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-app.get('/api/active-game', (req, res) => {
-  res.json({ game: activeGame });
+app.get('/api/user-info', async (req, res) => {
+  try {
+    // Allow both users and admins to access game pages
+    if (!req.session.user && !req.session.admin) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // For users, return user info
+    if (req.session.user) {
+      const user = await UserModel.getProfileWithCurrency(req.session.user.username);
+      
+      if (user) {
+        res.json(user);
+      } else {
+        res.status(404).json({ message: 'User not found' });
+      }
+    } else if (req.session.admin) {
+      // For admins, return admin info to identify them
+      res.json({
+        username: req.session.admin.username,
+        nama: req.session.admin.nama,
+        isAdmin: true,
+        currency: 0
+      });
+    } else {
+      res.json(null);
+    }
+  } catch (error) {
+    console.error('User info error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-app.get('/api/admin-info', (req, res) => {
+app.get('/api/active-game', async (req, res) => {
+  try {
+    if (!activeGame) {
+      activeGame = await GameModel.getActive();
+    }
+    res.json({ game: activeGame });
+  } catch (error) {
+    console.error('Active game error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/admin-info', async (req, res) => {
   if (!req.session.admin) {
     return res.status(401).json({ message: 'Not authenticated' });
   }
-  res.json(req.session.admin);
+  try {
+    const admin = await AdminModel.getByUsername(req.session.admin.username);
+    res.json(admin);
+  } catch (error) {
+    console.error('Admin info error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 // Admin API Routes
-app.get('/api/dashboard-stats', (req, res) => {
-  const onlinePlayers = Array.from(connectedUsers.values())
-    .filter(user => user.userType === 'user')
-    .length;
-  
-  res.json({
-    onlinePlayers,
-    activeGame,
-    totalUsers: users.length,
-    totalGames: games.length
-  });
-});
-
-app.get('/api/games', (req, res) => {
-  res.json(games);
-});
-
-app.post('/api/games', (req, res) => {
-  const game = req.body;
-  game.id = Date.now().toString();
-  games.push(game);
-  saveData();
-  res.json({ success: true, game });
-});
-
-app.put('/api/games/:id', (req, res) => {
-  const gameId = req.params.id;
-  const gameIndex = games.findIndex(g => g.id === gameId);
-  
-  if (gameIndex !== -1) {
-    games[gameIndex] = { ...games[gameIndex], ...req.body };
-    saveData();
-    res.json({ success: true, game: games[gameIndex] });
-  } else {
-    res.status(404).json({ message: 'Game not found' });
+app.get('/api/dashboard-stats', async (req, res) => {
+  try {
+    const onlinePlayers = Array.from(connectedUsers.values())
+      .filter(user => user.userType === 'user')
+      .length;
+    
+    const totalUsers = await UserModel.getAll();
+    const totalGames = await GameModel.getAll();
+    
+    res.json({
+      onlinePlayers,
+      activeGame,
+      totalUsers: totalUsers.length,
+      totalGames: totalGames.length
+    });
+  } catch (error) {
+    console.error('Dashboard stats error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-app.delete('/api/games/:id', (req, res) => {
-  const gameId = req.params.id;
-  games = games.filter(g => g.id !== gameId);
-  saveData();
-  res.json({ success: true });
-});
-
-app.post('/api/set-active-game/:id', (req, res) => {
-  const gameId = req.params.id;
-  
-  // Set all games to inactive first
-  games.forEach(game => {
-    game.status = 'inactive';
-  });
-  
-  // Set the selected game as active
-  const gameIndex = games.findIndex(g => g.id === gameId);
-  if (gameIndex !== -1) {
-    games[gameIndex].status = 'active';
-    activeGame = games[gameIndex];
-  } else {
-    activeGame = null;
+app.get('/api/games', async (req, res) => {
+  try {
+    const games = await GameModel.getAll();
+    res.json(games);
+  } catch (error) {
+    console.error('Games error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
-  
-  saveData();
-  
-  // Emit real-time update
-  io.emit('game-status-changed', { game: activeGame });
-  io.emit('game-activity', { type: 'game_activated', game: activeGame });
-  
-  res.json({ success: true, activeGame });
 });
 
-app.post('/api/set-inactive-game/:id', (req, res) => {
-  const gameId = req.params.id;
-  
-  // Set the selected game as inactive
-  const gameIndex = games.findIndex(g => g.id === gameId);
-  if (gameIndex !== -1) {
-    games[gameIndex].status = 'inactive';
+app.post('/api/games', async (req, res) => {
+  try {
+    const game = req.body;
+    const newGame = await GameModel.create(game);
+    res.json({ success: true, game: newGame });
+  } catch (error) {
+    console.error('Create game error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.put('/api/games/:id', async (req, res) => {
+  try {
+    const gameId = req.params.id;
+    const game = await GameModel.update(gameId, req.body);
+    
+    if (game) {
+      res.json({ success: true, game });
+    } else {
+      res.status(404).json({ message: 'Game not found' });
+    }
+  } catch (error) {
+    console.error('Update game error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.delete('/api/games/:id', async (req, res) => {
+  try {
+    const gameId = req.params.id;
+    const game = await GameModel.delete(gameId);
+    
+    if (game) {
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ message: 'Game not found' });
+    }
+  } catch (error) {
+    console.error('Delete game error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.post('/api/set-active-game/:id', async (req, res) => {
+  try {
+    const gameId = req.params.id;
+    
+    // Set all games to inactive first
+    await GameModel.updateAll({ status: 'inactive' });
+    
+    // Set the selected game as active
+    activeGame = await GameModel.setActive(gameId);
+    
+    // Emit real-time update
+    io.emit('game-status-changed', { game: activeGame });
+    io.emit('game-activity', { type: 'game_activated', game: activeGame });
+    
+    res.json({ success: true, activeGame });
+  } catch (error) {
+    console.error('Set active game error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.post('/api/set-inactive-game/:id', async (req, res) => {
+  try {
+    const gameId = req.params.id;
+    
+    // Set the selected game as inactive
+    await GameModel.setInactive(gameId);
     
     // Clear active game if this was the active one
     if (activeGame && activeGame.id === gameId) {
       activeGame = null;
     }
-  }
-  
-  saveData();
-  
-  // Clear game players
-  gamePlayers.clear();
-  
-  // Emit real-time update
-  io.emit('game-status-changed', { game: activeGame });
-  io.emit('game-activity', { type: 'game_deactivated', game: null });
-  io.emit('game-ended', { game: null }); // Notify all players that game ended
-  
-  res.json({ success: true, activeGame });
-});
-
-app.get('/api/users', (req, res) => {
-  res.json(users);
-});
-
-app.post('/api/users', (req, res) => {
-  const user = req.body;
-  users.push(user);
-  saveData();
-  res.json({ success: true, user });
-});
-
-app.put('/api/users/:username', (req, res) => {
-  const username = req.params.username;
-  const userIndex = users.findIndex(u => u.username === username);
-  
-  if (userIndex !== -1) {
-    users[userIndex] = { ...users[userIndex], ...req.body };
-    saveData();
-    res.json({ success: true, user: users[userIndex] });
-  } else {
-    res.status(404).json({ message: 'User not found' });
+    
+    // Clear game players
+    gamePlayers.clear();
+    
+    // Emit real-time update
+    io.emit('game-status-changed', { game: activeGame });
+    io.emit('game-activity', { type: 'game_deactivated', game: null });
+    io.emit('game-ended', { game: null }); // Notify all players that game ended
+    
+    res.json({ success: true, activeGame });
+  } catch (error) {
+    console.error('Set inactive game error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
-app.delete('/api/users/:username', (req, res) => {
-  const username = req.params.username;
-  users = users.filter(u => u.username !== username);
-  saveData();
-  res.json({ success: true });
-});
-
-app.post('/api/currency/:username', (req, res) => {
-  const username = req.params.username;
-  const { amount } = req.body;
-  
-  if (!playerCurrency[username]) {
-    playerCurrency[username] = 0;
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await UserModel.getAll();
+    res.json(users);
+  } catch (error) {
+    console.error('Users error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
-  
-  playerCurrency[username] += amount;
-  if (playerCurrency[username] < 0) {
-    playerCurrency[username] = 0;
+});
+
+app.post('/api/users', async (req, res) => {
+  try {
+    const user = req.body;
+    const newUser = await UserModel.create(user);
+    res.json({ success: true, user: newUser });
+  } catch (error) {
+    console.error('Create user error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
-  
-  saveData();
-  
-  // Emit real-time update
-  io.emit('currency-change', { username, amount: playerCurrency[username] });
-  
-  res.json({ success: true, currency: playerCurrency[username] });
 });
 
-app.get('/api/currency', (req, res) => {
-  // Combine user data with currency data
-  const usersWithCurrency = users.map(user => ({
-    ...user,
-    currency: playerCurrency[user.username] || 0
-  }));
-  
-  res.json(usersWithCurrency);
+app.put('/api/users/:username', async (req, res) => {
+  try {
+    const username = req.params.username;
+    const user = await UserModel.update(username, req.body);
+    
+    if (user) {
+      res.json({ success: true, user });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
-app.get('/api/players', (req, res) => {
-  // Combine user data with currency and online status
-  const onlineUsers = Array.from(connectedUsers.values())
-    .filter(user => user.userType === 'user')
-    .map(user => user.username);
-  
-  const playersWithStatus = users.map(user => ({
-    ...user,
-    currency: playerCurrency[user.username] || 0,
-    status: onlineUsers.includes(user.username) ? 'online' : 'offline'
-  }));
-  
-  res.json(playersWithStatus);
+app.delete('/api/users/:username', async (req, res) => {
+  try {
+    const username = req.params.username;
+    const user = await UserModel.delete(username);
+    
+    if (user) {
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.post('/api/currency/:username', async (req, res) => {
+  try {
+    const username = req.params.username;
+    const { amount } = req.body;
+    
+    const currency = await CurrencyModel.addCurrency(username, amount);
+    
+    // Emit real-time update
+    io.emit('currency-change', { username, amount: currency.amount });
+    
+    res.json({ success: true, currency: currency.amount });
+  } catch (error) {
+    console.error('Currency error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.get('/api/currency', async (req, res) => {
+  try {
+    const usersWithCurrency = await UserModel.getAllWithCurrency();
+    res.json(usersWithCurrency);
+  } catch (error) {
+    console.error('Currency list error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/players', async (req, res) => {
+  try {
+    // Get online usernames
+    const onlineUsers = Array.from(connectedUsers.values())
+      .filter(user => user.userType === 'user')
+      .map(user => user.username);
+    
+    const playersWithStatus = await CurrencyModel.getUsersWithCurrency(onlineUsers);
+    res.json(playersWithStatus);
+  } catch (error) {
+    console.error('Players error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 // Socket.IO connection handling
@@ -524,7 +556,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('distribute-rewards', (data) => {
+  socket.on('distribute-rewards', async (data) => {
     console.log('🎁 distribute-rewards event received from:', socket.username);
     console.log('🎁 Socket user type:', socket.userType);
     console.log('🎁 Event data:', data);
@@ -532,98 +564,109 @@ io.on('connection', (socket) => {
     console.log('🎁 Connected users size:', connectedUsers.size);
     
     if (socket.userType === 'admin') {
-      console.log('🎁 Admin distributing rewards:', data);
-      console.log(`📊 Current game players: ${gamePlayers.size}`);
-      
-      const { rewards, totalDistributed } = data;
-      const distributedPlayers = [];
-      
-      // Log all current players
-      console.log('👥 Current players in game:');
-      gamePlayers.forEach((player, username) => {
-        console.log(`  - ${player.nama} (${username}) from ${player.tim}`);
-      });
-      
-      // Log rewards to distribute
-      console.log('💰 Rewards to distribute:');
-      Object.entries(rewards).forEach(([teamName, rewardData]) => {
-        const amount = rewardData.amount || rewardData;
-        const rank = rewardData.rank || 0;
-        console.log(`  - ${teamName}: ${amount} coins (Rank #${rank})`);
-      });
-      
-      // Distribute rewards to players with ranking information
-      gamePlayers.forEach((player, username) => {
-        console.log(`🔍 Checking player ${player.nama} from team ${player.tim}`);
+      try {
+        console.log('🎁 Admin distributing rewards:', data);
+        console.log(`📊 Current game players: ${gamePlayers.size}`);
         
-        if (player.tim && rewards[player.tim]) {
-          const teamReward = rewards[player.tim].amount || rewards[player.tim];
-          const teamRank = rewards[player.tim].rank || 0;
-          const teamPlayers = Array.from(gamePlayers.values()).filter(p => p.tim === player.tim);
-          const perPlayerReward = Math.floor(teamReward / teamPlayers.length);
+        const { rewards, totalDistributed } = data;
+        const distributedPlayers = [];
+        
+        // Log all current players
+        console.log('👥 Current players in game:');
+        gamePlayers.forEach((player, username) => {
+          console.log(`  - ${player.nama} (${username}) from ${player.tim}`);
+        });
+        
+        // Log rewards to distribute
+        console.log('💰 Rewards to distribute:');
+        Object.entries(rewards).forEach(([teamName, rewardData]) => {
+          const amount = rewardData.amount || rewardData;
+          const rank = rewardData.rank || 0;
+          console.log(`  - ${teamName}: ${amount} coins (Rank #${rank})`);
+        });
+        
+        // Distribute rewards to players with ranking information
+        for (const [username, player] of gamePlayers) {
+          console.log(`🔍 Checking player ${player.nama} from team ${player.tim}`);
           
-          console.log(`💰 Team ${player.tim} reward: ${teamReward} coins, ${teamPlayers.length} players, ${perPlayerReward} coins each`);
-          
-          if (perPlayerReward > 0) {
-            // Update player currency
-            const oldBalance = playerCurrency[username] || 0;
-            playerCurrency[username] = oldBalance + perPlayerReward;
+          if (player.tim && rewards[player.tim]) {
+            const teamReward = rewards[player.tim].amount || rewards[player.tim];
+            const teamRank = rewards[player.tim].rank || 0;
+            const teamPlayers = Array.from(gamePlayers.values()).filter(p => p.tim === player.tim);
+            const perPlayerReward = Math.floor(teamReward / teamPlayers.length);
             
-            distributedPlayers.push({
-              username: username,
-              nama: player.nama,
-              tim: player.tim,
-              reward: perPlayerReward,
-              rank: teamRank
-            });
+            console.log(`💰 Team ${player.tim} reward: ${teamReward} coins, ${teamPlayers.length} players, ${perPlayerReward} coins each`);
             
-            const rankEmoji = teamRank === 1 ? '🥇' : teamRank === 2 ? '🥈' : teamRank === 3 ? '🥉' : '🏅';
-            console.log(`✅ ${player.nama} (${player.tim}) Rank #${teamRank}: ${oldBalance} → ${playerCurrency[username]} coins (+${perPlayerReward}) ${rankEmoji}`);
+            if (perPlayerReward > 0) {
+              // Update player currency in database
+              const currency = await CurrencyModel.addCurrency(username, perPlayerReward);
+              const oldBalance = currency.amount - perPlayerReward;
+              
+              // Create game result record
+              if (activeGame) {
+                await GameResultModel.create({
+                  game_id: activeGame.id,
+                  username: username,
+                  team: player.tim,
+                  rank: teamRank,
+                  reward: perPlayerReward
+                });
+              }
+              
+              distributedPlayers.push({
+                username: username,
+                nama: player.nama,
+                tim: player.tim,
+                reward: perPlayerReward,
+                rank: teamRank
+              });
+              
+              const rankEmoji = teamRank === 1 ? '🥇' : teamRank === 2 ? '🥈' : teamRank === 3 ? '🥉' : '🏅';
+              console.log(`✅ ${player.nama} (${player.tim}) Rank #${teamRank}: ${oldBalance} → ${currency.amount} coins (+${perPlayerReward}) ${rankEmoji}`);
+            } else {
+              console.log(`⚠️ ${player.nama} gets 0 coins (perPlayerReward = ${perPlayerReward})`);
+            }
           } else {
-            console.log(`⚠️ ${player.nama} gets 0 coins (perPlayerReward = ${perPlayerReward})`);
+            console.log(`❌ ${player.nama} (${player.tim}) - no reward configured for team ${player.tim}`);
           }
-        } else {
-          console.log(`❌ ${player.nama} (${player.tim}) - no reward configured for team ${player.tim}`);
         }
-      });
-      
-      // Save currency data
-      console.log('💾 Saving currency data...');
-      saveData();
-      console.log('✅ Currency data saved');
-      
-      // Clear game players after distribution
-      gamePlayers.clear();
-      console.log('🧹 Game players cleared after reward distribution');
-      
-      // Notify all clients about rewards with ranking
-      console.log('📡 Broadcasting rewards to all clients...');
-      console.log('📊 Connected clients:', connectedUsers.size);
-      console.log('📡 Broadcasting to all sockets...');
-      
-      const rewardsData = {
-        rewards: rewards,
-        totalDistributed: totalDistributed,
-        players: distributedPlayers
-      };
-      
-      console.log('📦 Rewards data to broadcast:', JSON.stringify(rewardsData, null, 2));
-      
-      io.emit('rewards-distributed', rewardsData);
-      console.log('✅ rewards-distributed event sent to all clients');
-      
-      io.emit('game-activity', { 
-        type: 'rewards_distributed', 
-        data: { rewards, totalDistributed, players: distributedPlayers }
-      });
-      console.log('✅ game-activity event sent to all clients');
-      
-      console.log(`🎉 SUCCESS: Rewards distributed to ${distributedPlayers.length} players, total: ${totalDistributed} coins`);
-      console.log('📊 Final distributed players:');
-      distributedPlayers.forEach(p => {
-        const rankEmoji = p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : p.rank === 3 ? '🥉' : '🏅';
-        console.log(`  - ${p.nama} (${p.tim}) Rank #${p.rank}: ${p.reward} coins ${rankEmoji}`);
-      });
+        
+        // Clear game players after distribution
+        gamePlayers.clear();
+        console.log('🧹 Game players cleared after reward distribution');
+        
+        // Notify all clients about rewards with ranking
+        console.log('📡 Broadcasting rewards to all clients...');
+        console.log('📊 Connected clients:', connectedUsers.size);
+        console.log('📡 Broadcasting to all sockets...');
+        
+        const rewardsData = {
+          rewards: rewards,
+          totalDistributed: totalDistributed,
+          players: distributedPlayers
+        };
+        
+        console.log('📦 Rewards data to broadcast:', JSON.stringify(rewardsData, null, 2));
+        
+        io.emit('rewards-distributed', rewardsData);
+        console.log('✅ rewards-distributed event sent to all clients');
+        
+        io.emit('game-activity', { 
+          type: 'rewards_distributed', 
+          data: { rewards, totalDistributed, players: distributedPlayers }
+        });
+        console.log('✅ game-activity event sent to all clients');
+        
+        console.log(`🎉 SUCCESS: Rewards distributed to ${distributedPlayers.length} players, total: ${totalDistributed} coins`);
+        console.log('📊 Final distributed players:');
+        distributedPlayers.forEach(p => {
+          const rankEmoji = p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : p.rank === 3 ? '🥉' : '🏅';
+          console.log(`  - ${p.nama} (${p.tim}) Rank #${p.rank}: ${p.reward} coins ${rankEmoji}`);
+        });
+      } catch (error) {
+        console.error('❌ Error distributing rewards:', error);
+        socket.emit('error', { message: 'Failed to distribute rewards' });
+      }
     } else {
       console.log(`❌ Non-admin ${socket.username} attempted to distribute rewards`);
       console.log(`❌ Socket userType: ${socket.userType}`);
@@ -638,37 +681,35 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.on('close-room', (data) => {
+  socket.on('close-room', async (data) => {
     if (socket.userType === 'admin') {
-      console.log('🔐 Room closed by admin:', socket.username);
-      
-      // Set game to inactive in data
-      if (activeGame) {
-        const gameIndex = games.findIndex(g => g.id === activeGame.id);
-        if (gameIndex !== -1) {
-          games[gameIndex].status = 'inactive';
+      try {
+        console.log('🔐 Room closed by admin:', socket.username);
+        
+        // Set game to inactive in database
+        if (activeGame) {
+          await GameModel.setInactive(activeGame.id);
           console.log(`🔐 Game ${activeGame.name} set to inactive on room close`);
+          
+          // Clear active game
+          activeGame = null;
+          console.log('🔐 Active game cleared on room close');
         }
         
-        // Clear active game
-        activeGame = null;
-        console.log('🔐 Active game cleared on room close');
+        // Clear game players
+        gamePlayers.clear();
+        console.log('🧹 Game players cleared on room close');
         
-        // Save data
-        saveData();
-        console.log('💾 Game status saved on room close');
+        // Emit events
+        io.emit('room-closed', { game: null });
+        io.emit('game-activity', { type: 'room_closed', game: null });
+        io.emit('game-status-changed', { game: null });
+        
+        console.log('📡 Room-closed events sent to all clients');
+      } catch (error) {
+        console.error('❌ Error closing room:', error);
+        socket.emit('error', { message: 'Failed to close room' });
       }
-      
-      // Clear game players
-      gamePlayers.clear();
-      console.log('🧹 Game players cleared on room close');
-      
-      // Emit events
-      io.emit('room-closed', { game: null });
-      io.emit('game-activity', { type: 'room_closed', game: null });
-      io.emit('game-status-changed', { game: null });
-      
-      console.log('📡 Room-closed events sent to all clients');
     }
   });
 
