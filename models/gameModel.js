@@ -177,7 +177,24 @@ class GameModel {
 
   // Get active game
   static async getActive() {
-    const result = await db.query('SELECT * FROM games WHERE status = $1', ['active']);
+    const result = await db.query(`
+      SELECT 
+        g.*,
+        CASE 
+          WHEN COUNT(gt.team_name) = 0 THEN '[]'::json
+          ELSE json_agg(
+            json_build_object(
+              'team_name', gt.team_name,
+              'player_count', gt.player_count
+            )
+            ORDER BY gt.team_name
+          )
+        END as teams
+      FROM games g
+      LEFT JOIN game_teams gt ON g.id = gt.game_id
+      WHERE g.status = $1
+      GROUP BY g.id
+    `, ['active']);
     return result.rows[0];
   }
 

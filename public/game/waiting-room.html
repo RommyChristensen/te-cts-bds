@@ -636,9 +636,12 @@
                 socket.emit('authenticate', { userType, username });
                 
                 // Get active game info
-                const gameResponse = await fetch('/api/active-game');
+                console.log('📡 Fetching active game...');
+                const gameResponse = await fetch('/api/active-game?t=' + Date.now());
+                console.log('📡 Active game response status:', gameResponse.status);
                 if (gameResponse.ok) {
                     const result = await gameResponse.json();
+                    console.log('📡 Active game response data:', result);
                     gameData = result.game;
                     
                     if (gameData) {
@@ -706,20 +709,28 @@
             if (gameData) {
                 document.getElementById('gameTitle').textContent = gameData.name.toUpperCase();
                 document.getElementById('gameDuration').textContent = `${gameData.duration} menit`;
-                document.getElementById('rewardCoins').textContent = `${gameData.rewardCoins} coins`;
+                document.getElementById('rewardCoins').textContent = `${gameData.reward_coins || 0} coins`;
                 document.getElementById('gameStatus').textContent = gameData.status === 'active' ? 'Aktif' : 'Menunggu';
                 document.getElementById('gameDescription').textContent = gameData.description || 'Tidak ada deskripsi';
             }
         }
 
         function loadTeams() {
-            if (!gameData) return;
+            console.log('🏢 Loading teams...');
+            
+            if (!gameData || !gameData.teams) {
+                console.log('❌ No teams data available');
+                return;
+            }
+            
+            console.log('📋 Available teams:', gameData.teams);
 
             const teamsContainer = document.getElementById('teamsContainer');
             teamsContainer.innerHTML = '';
 
-            gameData.teams.forEach(teamName => {
-                const maxPlayers = gameData.teamPlayers[teamName] || 0;
+            gameData.teams.forEach(team => {
+                const teamName = team.team_name;
+                const maxPlayers = team.player_count || 0;
                 
                 const teamCard = document.createElement('div');
                 teamCard.className = 'team-card';
@@ -768,9 +779,10 @@
             console.log('🏷️ Players grouped by team:', playersByTeam);
 
             // Update each team
-            gameData.teams.forEach(teamName => {
+            gameData.teams.forEach(team => {
+                const teamName = team.team_name;
                 const teamPlayers = playersByTeam[teamName] || [];
-                const maxPlayers = gameData.teamPlayers[teamName] || 0;
+                const maxPlayers = team.player_count || 0;
                 const currentCount = teamPlayers.length;
                 
                 console.log(`📋 Team ${teamName}: ${currentCount}/${maxPlayers} players`);
@@ -827,8 +839,9 @@
             if (!gameData) return;
 
             let allComplete = true;
-            gameData.teams.forEach(teamName => {
-                const maxPlayers = gameData.teamPlayers[teamName] || 0;
+            gameData.teams.forEach(team => {
+                const teamName = team.team_name;
+                const maxPlayers = team.player_count || 0;
                 const statusBadge = document.getElementById(`status-${teamName.replace(/\s+/g, '-')}`);
                 if (statusBadge) {
                     const currentText = statusBadge.textContent;
@@ -1059,7 +1072,7 @@
             rankingPanel.style.display = 'block';
             
             // Set total reward
-            document.getElementById('totalReward').textContent = gameData.rewardCoins;
+            document.getElementById('totalReward').textContent = gameData.reward_coins || 0;
             
             // Load teams for ranking
             loadTeamRanking();
@@ -1091,8 +1104,9 @@
                 window.originalTeamOrder = [...gameData.teams];
             }
             
-            gameData.teams.forEach((teamName, index) => {
-                const maxPlayers = gameData.teamPlayers[teamName] || 0;
+            gameData.teams.forEach((team, index) => {
+                const teamName = team.team_name;
+                const maxPlayers = team.player_count || 0;
                 const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : 'rank-other';
                 const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏅';
                 
@@ -1110,7 +1124,7 @@
                         <input type="number" 
                                id="reward-${teamName.replace(/\s+/g, '-')}" 
                                min="0" 
-                               max="${gameData.rewardCoins}" 
+                               max="${gameData.reward_coins || 0}" 
                                value="0" 
                                onchange="updateRewardTotal()">
                         <span>coins</span>
@@ -1228,7 +1242,8 @@
             // Use current DOM order, not original gameData.teams order
             teamCards.forEach(card => {
                 const teamName = card.dataset.teamName;
-                const maxPlayers = gameData.teamPlayers[teamName] || 0;
+                const team = gameData.teams.find(t => t.team_name === teamName);
+                const maxPlayers = team ? team.player_count : 0;
                 const rewardInput = card.querySelector(`#reward-${teamName.replace(/\s+/g, '-')}`);
                 
                 if (rewardInput) {
@@ -1245,7 +1260,7 @@
             });
             
             // Update total display and validation
-            const totalReward = gameData.rewardCoins;
+            const totalReward = gameData.reward_coins || 0;
             const totalDisplay = document.getElementById('totalReward');
             
             if (totalDistributed > totalReward) {
@@ -1366,7 +1381,8 @@
             
             // Clear player lists
             if (gameData) {
-                gameData.teams.forEach(teamName => {
+                gameData.teams.forEach(team => {
+                    const teamName = team.team_name;
                     const playersList = document.getElementById(`players-${teamName.replace(/\s+/g, '-')}`);
                     if (playersList) {
                         playersList.innerHTML = '<li class="player-item empty-state">Menunggu pemain...</li>';
@@ -1533,7 +1549,8 @@
                 
                 // Clear player lists
                 if (gameData) {
-                    gameData.teams.forEach(teamName => {
+                    gameData.teams.forEach(team => {
+                        const teamName = team.team_name;
                         const playersList = document.getElementById(`players-${teamName.replace(/\s+/g, '-')}`);
                         if (playersList) {
                             playersList.innerHTML = '<li class="player-item empty-state">Menunggu pemain...</li>';

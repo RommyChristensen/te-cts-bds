@@ -173,9 +173,8 @@ app.get('/api/user-info', async (req, res) => {
 
 app.get('/api/active-game', async (req, res) => {
   try {
-    if (!activeGame) {
-      activeGame = await GameModel.getActive();
-    }
+    // Always fetch from database to get latest state
+    const activeGame = await GameModel.getActive();
     res.json({ game: activeGame });
   } catch (error) {
     console.error('Active game error:', error);

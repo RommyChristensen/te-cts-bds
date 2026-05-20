@@ -996,8 +996,8 @@
                             <div class="game-status-title">${data.game.name}</div>
                             <div class="game-status-description">
                                 ${data.game.description}<br>
-                                Max Players: ${data.game.maxPlayers}<br>
-                                Duration: ${data.game.duration} menit
+                                Duration: ${data.game.duration} menit<br>
+                                Reward: ${data.game.reward_coins} coins
                             </div>
                             <button class="play-btn" onclick="joinGame()">Join Game</button>
                         </div>
@@ -1015,16 +1015,18 @@
                 // Get active game info
                 const response = await fetch('/api/active-game');
                 const gameData = await response.json();
+
+                console.log("game data", gameData)
                 
-                if (gameData && gameData.game && gameData.game.gameUrl) {
+                if (gameData && gameData.game && gameData.game.game_url) {
                     // Check if user's team is in the game teams
-                    if (gameData.game.teams.includes(currentUser.tim)) {
+                    if (gameData.game.teams && gameData.game.teams.some(team => team.team_name === currentUser.tim)) {
                         // Notify server that user is joining
                         socket.emit('join-game', { user: currentUser });
                         
                         // Open waiting room in new tab
                         console.log('🚀 Opening waiting room in new tab...');
-                        window.open(gameData.game.gameUrl, '_blank');
+                        window.open(gameData.game.game_url, '_blank');
                         
                         // Show notification to user
                         alert('Waiting room dibuka di tab baru! Silakan cek tab baru Anda.');

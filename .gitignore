@@ -128,3 +128,4 @@ Thumbs.db
 
 # Render specific
 render.yaml.backup
+.env
