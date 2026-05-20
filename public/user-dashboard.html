@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>User Dashboard - Game Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #404040 100%);
+            min-height: 100vh;
+            color: #ffffff;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 10;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1000;
+            background: rgba(192, 192, 192, 0.8);
+            color: #1a1a1a;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 5;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: -250px;
+                top: 0;
+                height: 100vh;
+                transition: left 0.3s ease;
+                z-index: 100;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+                padding-top: 4rem;
+            }
+
+            .content-header {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .content-title {
+                font-size: 1.5rem;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 280px;
+                left: -280px;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .main-content {
+                padding: 0.5rem;
+                padding-top: 3.5rem;
+            }
+
+            .content-header {
+                padding: 0.75rem;
+            }
+
+            .content-title {
+                font-size: 1.3rem;
+            }
+
+            .content-area {
+                padding: 0.75rem;
+            }
+
+            .user-info {
+                margin-bottom: 1rem;
+                padding-bottom: 1rem;
+            }
+
+            .user-avatar {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+
+            .nav-link {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .nav-icon {
+                font-size: 1rem;
+                margin-right: 0.5rem;
+            }
+        }
+
+        .user-info {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #c0c0c0 0%, #808080 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: #1a1a1a;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .user-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-team {
+            color: #c0c0c0;
+            font-size: 0.9rem;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: #e0e0e0;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(192, 192, 192, 0.2);
+            color: #ffffff;
+        }
+
+        .nav-icon {
+            margin-right: 0.75rem;
+            font-size: 1.2rem;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .content-header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .content-title {
+            font-size: 2rem;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .content-subtitle {
+            color: #c0c0c0;
+        }
+
+        .content-area {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            min-height: 400px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Standings Page */
+        .standings-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn {
+            background: transparent;
+            color: #c0c0c0;
+            border: none;
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            color: #ffffff;
+            border-bottom-color: #c0c0c0;
+            background: rgba(192, 192, 192, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .standings-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .standings-table th,
+        .standings-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .standings-table th {
+            background: rgba(192, 192, 192, 0.2);
+            color: #ffffff;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .standings-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .rank-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .rank-1 { background: #ffd700; color: #1a1a1a; }
+        .rank-2 { background: #c0c0c0; color: #1a1a1a; }
+        .rank-3 { background: #cd7f32; color: #ffffff; }
+        .rank-other { background: rgba(255, 255, 255, 0.2); color: #ffffff; }
+
+        /* Profile Page */
+        .profile-card {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #c0c0c0 0%, #808080 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: #1a1a1a;
+            font-size: 3rem;
+            font-weight: bold;
+        }
+
+        .profile-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-label {
+            color: #c0c0c0;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .currency-amount {
+            color: #51cf66;
+        }
+
+        /* Play Page */
+        .game-status {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .game-status-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .game-status-title {
+            font-size: 1.5rem;
+            color: #ffffff;
+            margin-bottom: 1rem;
+        }
+
+        .game-status-description {
+            color: #c0c0c0;
+            margin-bottom: 2rem;
+        }
+
+        .play-btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #c0c0c0 0%, #808080 100%);
+            color: #1a1a1a;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .play-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(192, 192, 192, 0.3);
+        }
+
+        .play-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .no-game {
+            color: #dc3545;
+        }
+
+        .logout-btn {
+            position: absolute;
+            bottom: 2rem;
+            left: 2rem;
+            right: 2rem;
+            padding: 0.75rem;
+            background: rgba(220, 53, 69, 0.8);
+            color: #ffffff;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(220, 53, 69, 1);
+        }
+
+        /* Responsive Tabs */
+        @media (max-width: 768px) {
+            .standings-tabs {
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .tab-btn {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+                border-bottom: none;
+                border-radius: 8px;
+                text-align: center;
+            }
+
+            .tab-btn.active {
+                background: rgba(192, 192, 192, 0.2);
+                border-bottom: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .tab-btn {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Responsive Tables */
+        @media (max-width: 768px) {
+            .standings-table {
+                font-size: 0.9rem;
+            }
+
+            .standings-table th,
+            .standings-table td {
+                padding: 0.5rem;
+            }
+
+            .rank-badge {
+                font-size: 0.7rem;
+                padding: 0.2rem 0.4rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .standings-table {
+                font-size: 0.8rem;
+            }
+
+            .standings-table th,
+            .standings-table td {
+                padding: 0.3rem;
+            }
+
+            .standings-table th:nth-child(3),
+            .standings-table td:nth-child(3) {
+                display: none; /* Hide team column on very small screens */
+            }
+        }
+
+        /* Responsive Profile */
+        @media (max-width: 768px) {
+            .profile-info {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .info-item {
+                padding: 1rem;
+            }
+
+            .info-value {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .profile-avatar {
+                width: 80px;
+                height: 80px;
+                font-size: 2rem;
+            }
+
+            .info-item {
+                padding: 0.75rem;
+            }
+
+            .info-value {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Responsive Play Page */
+        @media (max-width: 768px) {
+            .game-status {
+                padding: 2rem 1rem;
+            }
+
+            .game-status-icon {
+                font-size: 3rem;
+            }
+
+            .play-btn {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-status {
+                padding: 1.5rem 0.5rem;
+            }
+
+            .game-status-icon {
+                font-size: 2.5rem;
+            }
+
+            .game-status-title {
+                font-size: 1.2rem;
+            }
+
+            .game-status-description {
+                font-size: 0.9rem;
+            }
+
+            .play-btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top: 2px solid #c0c0c0;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+    <div class="sidebar-overlay" onclick="toggleMobileMenu()"></div>
+    
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <div class="user-name" id="userName">Loading...</div>
+                <div class="user-team" id="userTeam">Loading...</div>
+            </div>
+
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-page="standings">
+                            <span class="nav-icon">🏆</span>
+                            Standings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="profile">
+                            <span class="nav-icon">👤</span>
+                            Profil
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="play">
+                            <span class="nav-icon">🎮</span>
+                            Play
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="main-content">
+            <div class="content-header">
+                <h1 class="content-title" id="pageTitle">Standings</h1>
+                <p class="content-subtitle" id="pageSubtitle">Lihat peringkat tim saat ini</p>
+            </div>
+
+            <div class="content-area">
+                <!-- Standings Page -->
+                <div id="standings" class="page active">
+                    <div class="standings-tabs">
+                        <button class="tab-btn active" onclick="showStandingsTab('players')">🏆 Leaderboard Player</button>
+                        <button class="tab-btn" onclick="showStandingsTab('teams')">👥 Leaderboard Tim</button>
+                    </div>
+                    
+                    <div class="loading" id="standingsLoading">
+                        <div class="spinner"></div>
+                        <p>Memuat peringkat...</p>
+                    </div>
+                    
+                    <div id="playersTab" class="tab-content active">
+                        <div id="playersContent">
+                            <!-- Players leaderboard will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <div id="teamsTab" class="tab-content">
+                        <div id="teamsContent">
+                            <!-- Teams leaderboard will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Page -->
+                <div id="profile" class="page">
+                    <div class="profile-card">
+                        <div class="profile-header">
+                            <div class="profile-avatar" id="profileAvatar">U</div>
+                            <h2 id="profileName">Loading...</h2>
+                            <p id="profileTeam">Loading...</p>
+                        </div>
+                        <div class="profile-info">
+                            <div class="info-item">
+                                <div class="info-label">Username</div>
+                                <div class="info-value" id="profileUsername">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Tim</div>
+                                <div class="info-value" id="profileTeamName">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Currency</div>
+                                <div class="info-value currency-amount" id="profileCurrency">0</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Status</div>
+                                <div class="info-value" id="profileStatus">Active</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Play Page -->
+                <div id="play" class="page">
+                    <div class="loading" id="playLoading">
+                        <div class="spinner"></div>
+                        <p>Memuat game...</p>
+                    </div>
+                    <div id="playContent">
+                        <!-- Game status will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let currentUser = null;
+
+        // Page navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = link.dataset.page;
+                showPage(page);
+            });
+        });
+
+        function showPage(pageName) {
+            // Update nav
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+
+            // Update content
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageName).classList.add('active');
+
+            // Update header
+            updatePageHeader(pageName);
+
+            // Load page data
+            loadPageData(pageName);
+        }
+
+        function showStandingsTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Find the button that corresponds to this tab
+            const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => 
+                btn.textContent.toLowerCase().includes(tabName)
+            );
+            if (targetBtn) {
+                targetBtn.classList.add('active');
+            }
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName + 'Tab').classList.add('active');
+
+            // Load tab data
+            if (tabName === 'players') {
+                loadPlayersLeaderboard();
+            } else if (tabName === 'teams') {
+                loadTeamsLeaderboard();
+            }
+        }
+
+        function updatePageHeader(pageName) {
+            const titles = {
+                standings: { title: 'Standings', subtitle: 'Lihat peringkat tim saat ini' },
+                profile: { title: 'Profil', subtitle: 'Informasi akun Anda' },
+                play: { title: 'Play', subtitle: 'Mainkan game yang tersedia' }
+            };
+
+            const pageInfo = titles[pageName];
+            document.getElementById('pageTitle').textContent = pageInfo.title;
+            document.getElementById('pageSubtitle').textContent = pageInfo.subtitle;
+        }
+
+        function loadPageData(pageName) {
+            switch(pageName) {
+                case 'standings':
+                    loadPlayersLeaderboard(); // Load players leaderboard by default
+                    break;
+                case 'profile':
+                    loadProfile();
+                    break;
+                case 'play':
+                    loadPlay();
+                    break;
+            }
+        }
+
+        async function loadPlayersLeaderboard() {
+            const loading = document.getElementById('standingsLoading');
+            const content = document.getElementById('playersContent');
+            
+            loading.style.display = 'block';
+            content.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/standings');
+                const standings = await response.json();
+
+                loading.style.display = 'none';
+
+                if (standings.length === 0) {
+                    content.innerHTML = '<p style="text-align: center; color: #c0c0c0;">Belum ada data peringkat</p>';
+                    return;
+                }
+
+                const table = `
+                    <table class="standings-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Nama</th>
+                                <th>Tim</th>
+                                <th>Currency</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${standings.map((player, index) => `
+                                <tr>
+                                    <td><span class="rank-badge rank-${index < 3 ? index + 1 : 'other'}">#${index + 1}</span></td>
+                                    <td>${player.nama}</td>
+                                    <td>${player.tim}</td>
+                                    <td><span class="currency-amount">${player.currency || 0}</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                content.innerHTML = table;
+            } catch (error) {
+                loading.style.display = 'none';
+                content.innerHTML = '<p style="text-align: center; color: #ff6b6b;">Gagal memuat data</p>';
+                console.error('Error loading players leaderboard:', error);
+            }
+        }
+
+        async function loadTeamsLeaderboard() {
+            const loading = document.getElementById('standingsLoading');
+            const content = document.getElementById('teamsContent');
+            
+            loading.style.display = 'block';
+            content.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/standings');
+                const players = await response.json();
+
+                loading.style.display = 'none';
+
+                if (players.length === 0) {
+                    content.innerHTML = '<p style="text-align: center; color: #c0c0c0;">Belum ada data peringkat</p>';
+                    return;
+                }
+
+                // Calculate team points by summing up player currency
+                const teamPoints = {};
+                players.forEach(player => {
+                    if (!player.eliminated) {
+                        if (!teamPoints[player.tim]) {
+                            teamPoints[player.tim] = {
+                                name: player.tim,
+                                totalPoints: 0,
+                                memberCount: 0
+                            };
+                        }
+                        teamPoints[player.tim].totalPoints += (player.currency || 0);
+                        teamPoints[player.tim].memberCount += 1;
+                    }
+                });
+
+                // Convert to array and sort by total points
+                const teamsArray = Object.values(teamPoints).sort((a, b) => b.totalPoints - a.totalPoints);
+
+                if (teamsArray.length === 0) {
+                    content.innerHTML = '<p style="text-align: center; color: #c0c0c0;">Belum ada data tim</p>';
+                    return;
+                }
+
+                const table = `
+                    <table class="standings-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Tim</th>
+                                <th>Total Poin</th>
+                                <th>Jumlah Anggota</th>
+                                <th>Rata-rata Poin</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${teamsArray.map((team, index) => {
+                                const avgPoints = team.memberCount > 0 ? Math.round(team.totalPoints / team.memberCount) : 0;
+                                return `
+                                    <tr>
+                                        <td><span class="rank-badge rank-${index < 3 ? index + 1 : 'other'}">#${index + 1}</span></td>
+                                        <td>${team.name}</td>
+                                        <td><span class="currency-amount">${team.totalPoints}</span></td>
+                                        <td>${team.memberCount}</td>
+                                        <td><span class="currency-amount">${avgPoints}</span></td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+                content.innerHTML = table;
+            } catch (error) {
+                loading.style.display = 'none';
+                content.innerHTML = '<p style="text-align: center; color: #ff6b6b;">Gagal memuat data</p>';
+                console.error('Error loading teams leaderboard:', error);
+            }
+        }
+
+        async function loadProfile() {
+            if (!currentUser) return;
+
+            try {
+                const response = await fetch(`/api/profile/${currentUser.username}`);
+                const profile = await response.json();
+
+                document.getElementById('profileAvatar').textContent = profile.nama.charAt(0).toUpperCase();
+                document.getElementById('profileName').textContent = profile.nama;
+                document.getElementById('profileTeam').textContent = profile.tim;
+                document.getElementById('profileUsername').textContent = profile.username;
+                document.getElementById('profileTeamName').textContent = profile.tim;
+                document.getElementById('profileCurrency').textContent = profile.currency || 0;
+                document.getElementById('profileStatus').textContent = profile.eliminated ? 'Eliminated' : 'Active';
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        async function loadPlay() {
+            const loading = document.getElementById('playLoading');
+            const content = document.getElementById('playContent');
+            
+            loading.style.display = 'block';
+            content.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/active-game');
+                const data = await response.json();
+
+                loading.style.display = 'none';
+
+                if (!data.game) {
+                    content.innerHTML = `
+                        <div class="game-status">
+                            <div class="game-status-icon no-game">🎮</div>
+                            <div class="game-status-title">Tidak Ada Game Aktif</div>
+                            <div class="game-status-description">
+                                Saat ini tidak ada game yang sedang aktif. Silakan tunggu admin untuk memulai game.
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = `
+                        <div class="game-status">
+                            <div class="game-status-icon">🎮</div>
+                            <div class="game-status-title">${data.game.name}</div>
+                            <div class="game-status-description">
+                                ${data.game.description}<br>
+                                Max Players: ${data.game.maxPlayers}<br>
+                                Duration: ${data.game.duration} menit
+                            </div>
+                            <button class="play-btn" onclick="joinGame()">Join Game</button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                content.innerHTML = '<p style="text-align: center; color: #dc3545;">Gagal memuat data game</p>';
+                console.error('Error loading game:', error);
+            }
+        }
+
+        async function joinGame() {
+            try {
+                // Get active game info
+                const response = await fetch('/api/active-game');
+                const gameData = await response.json();
+                
+                if (gameData && gameData.game && gameData.game.gameUrl) {
+                    // Check if user's team is in the game teams
+                    if (gameData.game.teams.includes(currentUser.tim)) {
+                        // Notify server that user is joining
+                        socket.emit('join-game', { user: currentUser });
+                        
+                        // Open waiting room in new tab
+                        console.log('🚀 Opening waiting room in new tab...');
+                        window.open(gameData.game.gameUrl, '_blank');
+                        
+                        // Show notification to user
+                        alert('Waiting room dibuka di tab baru! Silakan cek tab baru Anda.');
+                    } else {
+                        alert('Tim Anda tidak terdaftar dalam game ini!');
+                    }
+                } else {
+                    alert('Tidak ada game yang aktif saat ini!');
+                }
+            } catch (error) {
+                console.error('Error joining game:', error);
+                alert('Gagal bergabung dengan game!');
+            }
+        }
+
+        function logout() {
+            if (confirm('Apakah Anda yakin ingin logout?')) {
+                window.location.href = '/';
+            }
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Initialize user data
+        async function initializeUser() {
+            try {
+                // Get user info from session or API
+                const response = await fetch('/api/user-info');
+                if (response.ok) {
+                    currentUser = await response.json();
+                    updateUserDisplay();
+                    loadProfile(); // Load profile data initially
+                } else {
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                console.error('Error initializing user:', error);
+                window.location.href = '/';
+            }
+        }
+
+        function updateUserDisplay() {
+            if (!currentUser) return;
+
+            document.getElementById('userAvatar').textContent = currentUser.nama.charAt(0).toUpperCase();
+            document.getElementById('userName').textContent = currentUser.nama;
+            document.getElementById('userTeam').textContent = currentUser.tim;
+        }
+
+        // Socket events
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            if (currentUser) {
+                socket.emit('authenticate', { userType: 'user', username: currentUser.username });
+            }
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from server');
+        });
+
+        socket.on('player-joined', (data) => {
+            console.log('Player joined:', data);
+        });
+
+        socket.on('currency-change', (data) => {
+            if (data.username === currentUser.username) {
+                loadProfile(); // Reload profile if it's current user's currency
+            }
+            if (document.getElementById('standings').classList.contains('active')) {
+                // Reload both leaderboards to show updated currency
+                if (document.getElementById('playersTab').classList.contains('active')) {
+                    loadPlayersLeaderboard();
+                }
+                if (document.getElementById('teamsTab').classList.contains('active')) {
+                    loadTeamsLeaderboard();
+                }
+            }
+        });
+
+        socket.on('elimination-update', (data) => {
+            if (data.username === currentUser.username) {
+                alert('Anda telah dieliminasi dari game!');
+                loadProfile();
+            }
+            // Reload both leaderboards to show updated elimination status
+            if (document.getElementById('playersTab').classList.contains('active')) {
+                loadPlayersLeaderboard();
+            }
+            if (document.getElementById('teamsTab').classList.contains('active')) {
+                loadTeamsLeaderboard();
+            }
+        });
+
+        socket.on('game-status-update', (data) => {
+            if (document.getElementById('play').classList.contains('active')) {
+                loadPlay(); // Reload play page to show updated game status
+            }
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeUser();
+            loadPlayersLeaderboard(); // Load initial page data
+        });
+    </script>
+</body>
+</html>

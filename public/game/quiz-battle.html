@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quiz Battle - Game Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #404040 100%);
+            min-height: 100vh;
+            color: #ffffff;
+        }
+
+        .game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .back-button {
+            background: rgba(192, 192, 192, 0.2);
+            color: #ffffff;
+            border: 1px solid rgba(192, 192, 192, 0.3);
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 2rem;
+        }
+
+        .back-button:hover {
+            background: rgba(192, 192, 192, 0.3);
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .game-title {
+            font-size: 3rem;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .game-subtitle {
+            color: #c0c0c0;
+            font-size: 1.2rem;
+        }
+
+        .waiting-room {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .waiting-title {
+            font-size: 2rem;
+            color: #ffffff;
+            margin-bottom: 2rem;
+        }
+
+        .game-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-label {
+            color: #c0c0c0;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .status-message {
+            background: rgba(81, 207, 102, 0.2);
+            color: #51cf66;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            border: 1px solid rgba(81, 207, 102, 0.3);
+        }
+
+        .quiz-preview {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .sample-question {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            color: #ffffff;
+            margin-bottom: 1rem;
+        }
+
+        .answer-options {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .answer-option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.75rem;
+            border-radius: 8px;
+            color: #c0c0c0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .answer-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 1rem;
+            }
+
+            .game-title {
+                font-size: 2rem;
+            }
+
+            .waiting-room {
+                padding: 2rem 1rem;
+            }
+
+            .game-info {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <a href="/user-dashboard" class="back-button">← Kembali ke Dashboard</a>
+        
+        <div class="game-header">
+            <h1 class="game-title">🧠 QUIZ BATTLE</h1>
+            <p class="game-subtitle">Waiting Room - Menunggu pemain bergabung...</p>
+        </div>
+
+        <div class="waiting-room">
+            <h2 class="waiting-title">📚 Waiting Room</h2>
+            
+            <div class="game-info">
+                <div class="info-card">
+                    <div class="info-label">Durasi</div>
+                    <div class="info-value" id="gameDuration">30 menit</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Reward</div>
+                    <div class="info-value" id="rewardCoins">100 coins</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Status</div>
+                    <div class="info-value" id="gameStatus">Menunggu</div>
+                </div>
+            </div>
+
+            <div class="status-message" id="statusMessage">
+                Game akan dimulai ketika semua pemain telah bergabung...
+            </div>
+
+            <div class="quiz-preview">
+                <h3 style="color: #c0c0c0; margin-bottom: 1rem;">Preview Quiz</h3>
+                <div class="sample-question">
+                    <div class="question-text">Apa ibu kota Indonesia?</div>
+                    <div class="answer-options">
+                        <div class="answer-option">A. Jakarta</div>
+                        <div class="answer-option">B. Surabaya</div>
+                        <div class="answer-option">C. Bandung</div>
+                        <div class="answer-option">D. Medan</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let currentUser = null;
+        let gameData = null;
+
+        // Get current user and game info
+        async function initializeGame() {
+            try {
+                // Get user info
+                const userResponse = await fetch('/api/user-info');
+                if (userResponse.ok) {
+                    currentUser = await userResponse.json();
+                }
+
+                // Get active game info
+                const gameResponse = await fetch('/api/active-game');
+                if (gameResponse.ok) {
+                    const result = await gameResponse.json();
+                    gameData = result.game;
+                    
+                    if (gameData) {
+                        updateGameInfo();
+                    }
+                }
+
+                // Connect to socket
+                socket.emit('authenticate', { userType: 'user', username: currentUser?.username });
+                
+            } catch (error) {
+                console.error('Error initializing game:', error);
+            }
+        }
+
+        function updateGameInfo() {
+            if (gameData) {
+                document.getElementById('gameDuration').textContent = `${gameData.duration} menit`;
+                document.getElementById('rewardCoins').textContent = `${gameData.rewardCoins} coins`;
+                document.getElementById('gameStatus').textContent = gameData.status === 'active' ? 'Aktif' : 'Menunggu';
+            }
+        }
+
+        // Socket event listeners
+        socket.on('player-joined', (data) => {
+            console.log('Player joined:', data);
+        });
+
+        socket.on('game-started', (data) => {
+            document.getElementById('gameStatus').textContent = 'Berlangsung';
+            document.getElementById('statusMessage').textContent = 'Game sedang berlangsung!';
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initializeGame);
+    </script>
+</body>
+</html>

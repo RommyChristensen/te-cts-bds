@@ -1,0 +1,14 @@
+[
+  {
+    "username": "admin001",
+    "nama": "Administrator Utama"
+  },
+  {
+    "username": "admin002",
+    "nama": "Game Master"
+  },
+  {
+    "username": "admin003",
+    "nama": "Event Coordinator"
+  }
+]

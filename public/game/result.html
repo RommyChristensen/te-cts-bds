@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Game Results</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #404040 100%);
+            min-height: 100vh;
+            color: #ffffff;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .result-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .result-title {
+            font-size: 3rem;
+            color: #ffd700;
+            margin-bottom: 1rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .result-subtitle {
+            color: #c0c0c0;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .game-info {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .game-name {
+            font-size: 2rem;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #c0c0c0;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffd700;
+        }
+
+        .rankings-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            margin-bottom: 3rem;
+            flex: 1;
+        }
+
+        .rankings-title {
+            font-size: 2rem;
+            color: #ffd700;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .rankings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .rank-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rank-card.rank-1 {
+            border-color: rgba(255, 215, 0, 0.5);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            box-shadow: 0 15px 30px rgba(255, 215, 0, 0.2);
+        }
+
+        .rank-card.rank-2 {
+            border-color: rgba(192, 192, 192, 0.5);
+            background: linear-gradient(135deg, rgba(192, 192, 192, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            box-shadow: 0 15px 30px rgba(192, 192, 192, 0.2);
+        }
+
+        .rank-card.rank-3 {
+            border-color: rgba(205, 127, 50, 0.5);
+            background: linear-gradient(135deg, rgba(205, 127, 50, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            box-shadow: 0 15px 30px rgba(205, 127, 50, 0.2);
+        }
+
+        .rank-medal {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: block;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .rank-position {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+
+        .rank-position.rank-1 { color: #ffd700; }
+        .rank-position.rank-2 { color: #c0c0c0; }
+        .rank-position.rank-3 { color: #cd7f32; }
+
+        .team-name {
+            font-size: 1.8rem;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .players-list {
+            margin-bottom: 1.5rem;
+        }
+
+        .player-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .player-name {
+            font-weight: 500;
+        }
+
+        .player-reward {
+            color: #ffd700;
+            font-weight: 600;
+        }
+
+        .team-total {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .team-total-label {
+            color: #c0c0c0;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .team-total-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #ffd700;
+        }
+
+        .actions-section {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .back-button {
+            background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);
+            color: #ffffff;
+            border: none;
+            padding: 1rem 3rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 20px rgba(81, 207, 102, 0.3);
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(81, 207, 102, 0.4);
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 3rem;
+            color: #c0c0c0;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffd700;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 3rem;
+            color: #ff6b6b;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #ffd700;
+            position: absolute;
+            animation: confetti-fall 3s linear;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .result-container {
+                padding: 1rem;
+            }
+
+            .result-title {
+                font-size: 2rem;
+            }
+
+            .game-info, .rankings-section {
+                padding: 2rem 1rem;
+            }
+
+            .rankings-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .rank-card {
+                padding: 1.5rem;
+            }
+
+            .rank-medal {
+                font-size: 3rem;
+            }
+
+            .game-stats {
+                gap: 1.5rem;
+            }
+
+            .back-button {
+                padding: 1rem 2rem;
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="result-container">
+        <div class="result-header">
+            <h1 class="result-title">🏆 GAME RESULTS 🏆</h1>
+            <p class="result-subtitle">Congratulations to all participants!</p>
+        </div>
+
+        <div id="loadingState" class="loading-state">
+            <div class="loading-spinner"></div>
+            <p>Loading game results...</p>
+        </div>
+
+        <div id="errorState" class="error-state" style="display: none;">
+            <p>⚠️ Unable to load game results</p>
+            <p>Please try again later</p>
+        </div>
+
+        <div id="resultContent" style="display: none;">
+            <div class="game-info">
+                <h2 class="game-name" id="gameName">Loading Game...</h2>
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Total Rewards</div>
+                        <div class="stat-value" id="totalRewards">0 coins</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Participants</div>
+                        <div class="stat-value" id="totalParticipants">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Teams</div>
+                        <div class="stat-value" id="totalTeams">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rankings-section">
+                <h2 class="rankings-title">🏅 Team Rankings</h2>
+                <div class="rankings-grid" id="rankingsGrid">
+                    <!-- Rankings will be loaded here -->
+                </div>
+            </div>
+
+            <div class="actions-section">
+                <button class="back-button" onclick="closeOrDashboard()">✕ Close Page</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let gameData = null;
+        let currentUser = null;
+        let resultsData = null;
+
+        // Get URL parameters
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            const results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // Initialize results page
+        async function initializeResults() {
+            try {
+                console.log('🏆 Initializing results page...');
+                console.log('🍪 Current cookies:', document.cookie);
+                console.log('🔗 Current URL:', window.location.href);
+                
+                // Get current user info
+                try {
+                    const userResponse = await fetch('/api/user-info');
+                    console.log('📡 User info response status:', userResponse.status);
+                    
+                    if (userResponse.ok) {
+                        currentUser = await userResponse.json();
+                        console.log('✅ User info loaded:', currentUser);
+                    } else {
+                        console.log('⚠️ User info response not ok:', userResponse.status);
+                        const errorData = await userResponse.json();
+                        console.log('⚠️ Error data:', errorData);
+                    }
+                } catch (userError) {
+                    console.error('❌ Error fetching user info:', userError);
+                }
+
+                // Get game info
+                try {
+                    const gameResponse = await fetch('/api/active-game');
+                    console.log('📡 Game info response status:', gameResponse.status);
+                    
+                    if (gameResponse.ok) {
+                        const result = await gameResponse.json();
+                        gameData = result.game;
+                        console.log('✅ Game data loaded:', gameData);
+                    } else {
+                        console.log('⚠️ Game info response not ok:', gameResponse.status);
+                    }
+                } catch (gameError) {
+                    console.error('❌ Error fetching game info:', gameError);
+                }
+
+                // Wait for results data (could be passed via URL or stored)
+                await loadResultsData();
+                
+                // Display results
+                if (resultsData) {
+                    displayResults();
+                    createConfetti();
+                } else {
+                    console.log('❌ No results data available, showing error');
+                    showError();
+                }
+                
+            } catch (error) {
+                console.error('❌ Error initializing results:', error);
+                console.error('❌ Stack trace:', error.stack);
+                showError();
+            }
+        }
+
+        // Load results data
+        async function loadResultsData() {
+            try {
+                console.log('🔍 Loading results data...');
+                
+                // Try to get results from URL parameters first
+                const resultsParam = getUrlParameter('results');
+                console.log('📝 URL parameter found:', resultsParam ? 'Yes' : 'No');
+                
+                if (resultsParam) {
+                    try {
+                        console.log('🔓 Decoding URL parameter...');
+                        const decodedResults = atob(resultsParam);
+                        console.log('📝 Decoded results length:', decodedResults.length);
+                        
+                        resultsData = JSON.parse(decodedResults);
+                        console.log('✅ Results data loaded from URL:', resultsData);
+                        
+                        // Validate results data
+                        if (resultsData && resultsData.players && resultsData.players.length > 0) {
+                            console.log('✅ Results data validation passed');
+                            return;
+                        } else {
+                            console.log('⚠️ Results data validation failed, trying socket fallback');
+                        }
+                    } catch (decodeError) {
+                        console.error('❌ Error decoding URL parameter:', decodeError);
+                    }
+                }
+
+                // If not in URL or invalid, wait for socket event
+                console.log('🔄 Waiting for socket event...');
+                return new Promise((resolve) => {
+                    const socket = io();
+                    
+                    socket.on('connect', () => {
+                        console.log('🔌 Connected to socket for results');
+                        
+                        // Authenticate
+                        const userType = currentUser && !currentUser.isAdmin ? 'user' : 'admin';
+                        const username = currentUser ? currentUser.username : null;
+                        console.log('🔐 Authenticating as:', { userType, username });
+                        socket.emit('authenticate', { userType, username });
+                    });
+
+                    socket.on('rewards-distributed', (data) => {
+                        console.log('🎁 Results data received via socket:', data);
+                        resultsData = data;
+                        console.log('✅ Results data loaded via socket');
+                        resolve();
+                    });
+
+                    // Timeout after 10 seconds
+                    setTimeout(() => {
+                        if (!resultsData) {
+                            console.log('⏰ Timeout waiting for results data');
+                            console.log('⚠️ No results data available, showing empty state');
+                        }
+                        resolve();
+                    }, 10000);
+                });
+                
+            } catch (error) {
+                console.error('❌ Error loading results data:', error);
+                console.error('❌ Stack trace:', error.stack);
+            }
+        }
+
+        // Display results
+        function displayResults() {
+            console.log('📊 Displaying results...');
+            console.log('📊 Results data available:', !!resultsData);
+            console.log('📊 Game data available:', !!gameData);
+            
+            // Hide loading state
+            document.getElementById('loadingState').style.display = 'none';
+            
+            // Check if we have valid data
+            if (!resultsData || !resultsData.players || resultsData.players.length === 0) {
+                console.log('❌ No valid results data, showing error state');
+                showError();
+                return;
+            }
+
+            if (!gameData) {
+                console.log('❌ No game data, showing error state');
+                showError();
+                return;
+            }
+
+            console.log('✅ All data available, displaying results...');
+            
+            // Show content
+            document.getElementById('errorState').style.display = 'none';
+            document.getElementById('resultContent').style.display = 'block';
+
+            // Update game info
+            document.getElementById('gameName').textContent = gameData.name || 'Game Results';
+            document.getElementById('totalRewards').textContent = `${resultsData.totalDistributed || 0} coins`;
+            document.getElementById('totalParticipants').textContent = resultsData.players ? resultsData.players.length : 0;
+            document.getElementById('totalTeams').textContent = Object.keys(resultsData.rewards || {}).length;
+
+            console.log('📊 Game info updated');
+
+            // Create ranking cards
+            createRankingCards();
+            console.log('✅ Results display completed');
+        }
+
+        // Create ranking cards
+        function createRankingCards() {
+            if (!resultsData || !resultsData.players) return;
+
+            const rankingsGrid = document.getElementById('rankingsGrid');
+            rankingsGrid.innerHTML = '';
+
+            // Group players by team and sort by rank
+            const teamData = {};
+            
+            resultsData.players.forEach(player => {
+                const teamName = player.tim;
+                if (!teamData[teamName]) {
+                    teamData[teamName] = {
+                        rank: player.rank || 0,
+                        players: [],
+                        totalReward: 0
+                    };
+                }
+                teamData[teamName].players.push(player);
+                teamData[teamName].totalReward += player.reward || 0;
+            });
+
+            // Sort teams by rank
+            const sortedTeams = Object.entries(teamData)
+                .sort(([,a], [,b]) => a.rank - b.rank);
+
+            // Create cards for each team
+            sortedTeams.forEach(([teamName, data], index) => {
+                const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+                const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏅';
+                const rankNumber = data.rank || (index + 1);
+
+                const teamCard = document.createElement('div');
+                teamCard.className = `rank-card ${rankClass}`;
+                
+                teamCard.innerHTML = `
+                    <div class="rank-medal">${rankEmoji}</div>
+                    <div class="rank-position ${rankClass}">Rank #${rankNumber}</div>
+                    <div class="team-name">${teamName}</div>
+                    <div class="players-list">
+                        ${data.players.map(player => `
+                            <div class="player-item">
+                                <span class="player-name">${player.nama}</span>
+                                <span class="player-reward">+${player.reward} coins</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="team-total">
+                        <div class="team-total-label">Team Total Reward</div>
+                        <div class="team-total-value">${data.totalReward} coins</div>
+                    </div>
+                `;
+                
+                rankingsGrid.appendChild(teamCard);
+            });
+
+            console.log(`✅ Created ${sortedTeams.length} ranking cards`);
+        }
+
+        // Create confetti effect
+        function createConfetti() {
+            const colors = ['#ffd700', '#c0c0c0', '#cd7f32', '#51cf66', '#ff6b6b'];
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 100);
+            }
+        }
+
+        // Show error state
+        function showError() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+            document.getElementById('resultContent').style.display = 'none';
+        }
+
+        // Close page or go to dashboard
+        function closeOrDashboard() {
+            console.log('🔄 Close or dashboard action...');
+            
+            if (currentUser && currentUser.isAdmin) {
+                console.log('👨‍💼 Admin - redirecting to dashboard...');
+                window.location.href = '/admin-dashboard.html';
+            } else {
+                console.log('👤 Player - closing page...');
+                window.close();
+            }
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initializeResults);
+    </script>
+</body>
+</html>

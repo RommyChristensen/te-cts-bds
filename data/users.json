@@ -1,0 +1,56 @@
+[
+  {
+    "username": "player001",
+    "nama": "John Doe",
+    "tim": "Team Alpha",
+    "eliminated": false
+  },
+  {
+    "username": "player002",
+    "nama": "Jane Smith",
+    "tim": "Team Beta",
+    "eliminated": false
+  },
+  {
+    "username": "player003",
+    "nama": "Mike Johnson",
+    "tim": "Team Alpha",
+    "eliminated": false
+  },
+  {
+    "username": "player004",
+    "nama": "Sarah Williams",
+    "tim": "Team Gamma",
+    "eliminated": false
+  },
+  {
+    "username": "player005",
+    "nama": "David Brown",
+    "tim": "Team Beta",
+    "eliminated": false
+  },
+  {
+    "username": "player006",
+    "nama": "Lisa Davis",
+    "tim": "Team Gamma",
+    "eliminated": false
+  },
+  {
+    "username": "player007",
+    "nama": "Tom Wilson",
+    "tim": "Team Alpha",
+    "eliminated": false
+  },
+  {
+    "username": "player008",
+    "nama": "Emma Moore",
+    "tim": "Team Beta",
+    "eliminated": false
+  },
+  {
+    "username": "player009",
+    "nama": "Chris Taylor",
+    "tim": "Team Gamma",
+    "eliminated": false
+  }
+]

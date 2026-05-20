@@ -1,0 +1,36 @@
+[
+  {
+    "name": "Effiency Race",
+    "description": "Deskripsi",
+    "duration": 5,
+    "teams": [
+      "Team Alpha",
+      "Team Beta",
+      "Team Gamma"
+    ],
+    "teamPlayers": {
+      "Team Alpha": 1,
+      "Team Beta": 1,
+      "Team Gamma": 1
+    },
+    "rewardCoins": 50,
+    "gameUrl": "/game/effiency-race",
+    "status": "inactive",
+    "id": "1779162952410"
+  },
+  {
+    "name": "Test Game",
+    "description": "test game",
+    "duration": 5,
+    "teams": [
+      "Team Alpha"
+    ],
+    "teamPlayers": {
+      "Team Alpha": 1
+    },
+    "rewardCoins": 10,
+    "gameUrl": "/game/test-game",
+    "status": "inactive",
+    "id": "1779248808937"
+  }
+]

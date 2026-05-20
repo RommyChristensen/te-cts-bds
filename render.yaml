@@ -1,0 +1,25 @@
+services:
+  # Node.js Web Service
+  - type: web
+    name: interactive-game-website
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    
+    # Environment variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+        
+    # Directory configuration
+    rootDir: ./
+    
+    # Performance settings
+    scaling:
+      minInstances: 1
+      maxInstances: 1
