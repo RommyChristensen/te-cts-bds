@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: interactive-game-website
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install && npm run migrate
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: SESSION_SECRET
+        generateValue: true
+    
+    # PostgreSQL database will be added manually in dashboard
+    
+    scaling:
+      minInstances: 1
+      maxInstances: 1
