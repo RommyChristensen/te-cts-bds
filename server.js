@@ -34,6 +34,7 @@ app.use(session({
 // Game state
 let gamePlayers = new Map(); // Track players in current game
 let completedPlayers = new Map(); // Track players who completed games (for rewards)
+let recentActivity = []; // Track recent answer submissions as fallback
 let activeGame = null;
 
 // Routes
@@ -571,6 +572,19 @@ io.on('connection', (socket) => {
   socket.on('answer-submitted', (data) => {
     console.log('🎯 Answer submitted:', data);
     
+    // Add to recent activity as fallback (works even without restart)
+    if (data.correct) {
+      recentActivity.push({
+        ...data.user,
+        team: data.teamName || data.user.tim,
+        completedAt: Date.now(),
+        answer: data.answer,
+        time: data.time
+      });
+      console.log(`📝 Added to recent activity: ${data.user.nama} (${data.user.username})`);
+      console.log(`📊 Total recent activity: ${recentActivity.length}`);
+    }
+    
     // Add to completed players if answer is correct and not already tracked
     if (data.correct && !completedPlayers.has(data.user.username)) {
       completedPlayers.set(data.user.username, {
@@ -633,10 +647,25 @@ io.on('connection', (socket) => {
           console.log(`  - ${teamName}: ${amount} coins (Rank #${rank})`);
         });
         
-        // Use completedPlayers if gamePlayers is empty (players may have disconnected)
-        const playersToReward = gamePlayers.size > 0 ? gamePlayers : completedPlayers;
+        // Use fallback chain: gamePlayers -> completedPlayers -> recentActivity
+        let playersToReward = gamePlayers;
+        let sourceName = 'gamePlayers';
         
-        console.log(`📊 Using ${playersToReward === gamePlayers ? 'gamePlayers' : 'completedPlayers'} for reward distribution`);
+        if (playersToReward.size === 0 && completedPlayers.size > 0) {
+            playersToReward = completedPlayers;
+            sourceName = 'completedPlayers';
+        } else if (playersToReward.size === 0 && recentActivity.length > 0) {
+            // Convert recentActivity array to Map for consistent processing
+            playersToReward = new Map();
+            recentActivity.forEach(player => {
+                if (!playersToReward.has(player.username)) {
+                    playersToReward.set(player.username, player);
+                }
+            });
+            sourceName = 'recentActivity';
+        }
+        
+        console.log(`📊 Using ${sourceName} for reward distribution`);
         console.log(`👥 Players to reward: ${playersToReward.size}`);
         
         // Distribute rewards to players with ranking information
