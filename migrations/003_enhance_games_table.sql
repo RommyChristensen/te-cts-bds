@@ -24,17 +24,17 @@ CREATE TABLE IF NOT EXISTS game_teams (
     UNIQUE(game_id, team_name)
 );
 
--- Insert default teams
+-- Insert default teams (Team 1-12 format)
 INSERT INTO teams (name) VALUES 
-    ('Team Alpha'), 
-    ('Team Beta'), 
-    ('Team Gamma')
+    ('Team 1'), ('Team 2'), ('Team 3'), ('Team 4'), ('Team 5'), ('Team 6'),
+    ('Team 7'), ('Team 8'), ('Team 9'), ('Team 10'), ('Team 11'), ('Team 12')
 ON CONFLICT (name) DO NOTHING;
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_game_teams_game_id ON game_teams(game_id);
 CREATE INDEX IF NOT EXISTS idx_game_teams_team_name ON game_teams(team_name);
 
--- Add triggers for updated_at on game_teams
+-- Add triggers for updated_at on game_teams (only if not exists)
+DROP TRIGGER IF EXISTS update_game_teams_updated_at ON game_teams;
 CREATE TRIGGER update_game_teams_updated_at BEFORE UPDATE ON game_teams
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
