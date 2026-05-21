@@ -1,0 +1,524 @@
+[
+  {
+    "Name": "Angelia",
+    "Initial": "NGL",
+    "Gender": "P",
+    "BDS Team": "WIBU",
+    "Birthday Date": "19-Apr",
+    "Player ID": 472,
+    "Team": 1
+  },
+  {
+    "Name": "Emerald Bismaputra",
+    "Initial": "EBP",
+    "Gender": "L",
+    "BDS Team": "BTS",
+    "Birthday Date": "04-Sep",
+    "Player ID": 526,
+    "Team": 1
+  },
+  {
+    "Name": "Mieke Puspa",
+    "Initial": "MIK",
+    "Gender": "P",
+    "BDS Team": "BTS",
+    "Birthday Date": "14-Aug",
+    "Player ID": 391,
+    "Team": 1
+  },
+  {
+    "Name": "Wilson Adrilla",
+    "Initial": "WAS",
+    "Gender": "L",
+    "BDS Team": "SQI",
+    "Birthday Date": "16-Oct",
+    "Player ID": 319,
+    "Team": 1
+  },
+  {
+    "Name": "Eric Winata Jonathan",
+    "Initial": "ERK",
+    "Gender": "L",
+    "BDS Team": "BDSM",
+    "Birthday Date": "18-Jul",
+    "Player ID": 581,
+    "Team": 2
+  },
+  {
+    "Name": "Lady Theresa Tandiono",
+    "Initial": "LTT",
+    "Gender": "P",
+    "BDS Team": "BTS",
+    "Birthday Date": "16-May",
+    "Player ID": 200,
+    "Team": 2
+  },
+  {
+    "Name": "Marcella Clarissa Christabel",
+    "Initial": "MSL",
+    "Gender": "P",
+    "BDS Team": "BDSM",
+    "Birthday Date": "16-Jan",
+    "Player ID": 392,
+    "Team": 2
+  },
+  {
+    "Name": "Rendi",
+    "Initial": "RDW",
+    "Gender": "L",
+    "BDS Team": "BTS",
+    "Birthday Date": "10-Feb",
+    "Player ID": 843,
+    "Team": 2
+  },
+  {
+    "Name": "Sandy Danish Arkansa",
+    "Initial": "SDA",
+    "Gender": "L",
+    "BDS Team": "BDSM",
+    "Birthday Date": "12-May",
+    "Player ID": 941,
+    "Team": 2
+  },
+  {
+    "Name": "Benedictus Betavian Usdinoari",
+    "Initial": "BTA",
+    "Gender": "L",
+    "BDS Team": "WIBU",
+    "Birthday Date": "18-Jun",
+    "Player ID": 201,
+    "Team": 3
+  },
+  {
+    "Name": "Bina",
+    "Initial": "BIN",
+    "Gender": "L",
+    "BDS Team": "WIBU",
+    "Birthday Date": "01-Jul",
+    "Player ID": 294,
+    "Team": 3
+  },
+  {
+    "Name": "Cassie Michelle",
+    "Initial": "CSM",
+    "Gender": "P",
+    "BDS Team": "WIBU",
+    "Birthday Date": "16-Aug",
+    "Player ID": 393,
+    "Team": 3
+  },
+  {
+    "Name": "Robin Lee",
+    "Initial": "RLE",
+    "Gender": "L",
+    "BDS Team": "SQI",
+    "Birthday Date": "06-Dec",
+    "Player ID": 825,
+    "Team": 3
+  },
+  {
+    "Name": "Sulamitha Valeri Dero",
+    "Initial": "SVD",
+    "Gender": "P",
+    "BDS Team": "WIBU",
+    "Birthday Date": "13-Jun",
+    "Player ID": 924,
+    "Team": 3
+  },
+  {
+    "Name": "Arsil Qodryantha",
+    "Initial": "ARQ",
+    "Gender": "L",
+    "BDS Team": "BDSM",
+    "Birthday Date": "30-Dec",
+    "Player ID": 187,
+    "Team": 4
+  },
+  {
+    "Name": "Clement Rivandi",
+    "Initial": "CLE",
+    "Gender": "L",
+    "BDS Team": "BTS",
+    "Birthday Date": "30-Jun",
+    "Player ID": 325,
+    "Team": 4
+  },
+  {
+    "Name": "David Christopher Sentosa",
+    "Initial": "DCS",
+    "Gender": "L",
+    "BDS Team": "BTS",
+    "Birthday Date": "28-May",
+    "Player ID": 439,
+    "Team": 4
+  },
+  {
+    "Name": "Dhana Dhira",
+    "Initial": "DHD",
+    "Gender": "L",
+    "BDS Team": "WIBU",
+    "Birthday Date": "07-Sep",
+    "Player ID": 484,
+    "Team": 4
+  },
+  {
+    "Name": "Teguh Muflih Rizky",
+    "Initial": "GUH",
+    "Gender": "L",
+    "BDS Team": "SQI",
+    "Birthday Date": "13-Dec",
+    "Player ID": 718,
+    "Team": 4
+  },
+  {
+    "Name": "Andreas Jonathan",
+    "Initial": "AJN",
+    "Gender": "L",
+    "BDS Team": "BDSM",
+    "Birthday Date": "09-May",
+    "Player ID": 104,
+    "Team": 5
+  },
+  {
+    "Name": "Christine Sanjaya",
+    "Initial": "XTN",
+    "Gender": "P",
+    "BDS Team": "SQI",
+    "Birthday Date": "17-Dec",
+    "Player ID": 404,
+    "Team": 5
+  },
+  {
+    "Name": "Gladys Ivana Augusta",
+    "Initial": "GIA",
+    "Gender": "P",
+    "BDS Team": "BDSM",
+    "Birthday Date": "31-Aug",
+    "Player ID": 791,
+    "Team": 5
+  },
+  {
+    "Name": "Philipus Kristian Renaldy",
+    "Initial": "PKR",
+    "Gender": "L",
+    "BDS Team": "BTS",
+    "Birthday Date": "14-Oct",
+    "Player ID": 618,
+    "Team": 5
+  },
+  {
+    "Name": "Yandy Gunadi",
+    "Initial": "YGY",
+    "Gender": "L",
+    "BDS Team": "BTS",
+    "Birthday Date": "20-Jun",
+    "Player ID": 575,
+    "Team": 5
+  },
+  {
+    "Name": "Aprianto",
+    "Initial": "ATO",
+    "Gender": "L",
+    "BDS Team": "WIBU",
+    "Birthday Date": "30-Apr",
+    "Player ID": 105,
+    "Team": 6
+  },
+  {
+    "Name": "Dicksen Alfersius Novian",
+    "Initial": "DAA",
+    "Gender": "L",
+    "BDS Team": "BTS",
+    "Birthday Date": "18-Jul",
+    "Player ID": 411,
+    "Team": 6
+  },
+  {
+    "Name": "Erik Sanjaya",
+    "Initial": "RIK",
+    "Gender": "L",
+    "BDS Team": "WIBU",
+    "Birthday Date": "28-Nov",
+    "Player ID": 891,
+    "Team": 6
+  },
+  {
+    "Name": "Minawati",
+    "Initial": "MNW",
+    "Gender": "P",
+    "BDS Team": "BTS",
+    "Birthday Date": "01-Oct",
+    "Player ID": 343,
+    "Team": 6
+  },
+  {
+    "Name": "Kevin Hartono Sasongko",
+    "Initial": "KHS",
+    "Gender": "L",
+    "BDS Team": "WIBU",
+    "Birthday Date": "04-Jun",
+    "Player ID": 189,
+    "Team": 6
+  },
+  {
+    "Name": "Difa Sanditya Alifian",
+    "Initial": "DIF",
+    "Gender": "L",
+    "BDS Team": "BDSM",
+    "Birthday Date": "27-Sep",
+    "Player ID": 496,
+    "Team": 7
+  },
+  {
+    "Name": "Ferdi Landauw",
+    "Initial": "FDI",
+    "Gender": "L",
+    "BDS Team": "Kabiro",
+    "Birthday Date": "30-Jun",
+    "Player ID": 649,
+    "Team": 7
+  },
+  {
+    "Name": "Gamas Bloory Lautan",
+    "Initial": "GMS",
+    "Gender": "L",
+    "BDS Team": "BTS",
+    "Birthday Date": "27-Jul",
+    "Player ID": 739,
+    "Team": 7
+  },
+  {
+    "Name": "Giovanni Dalva Chandra",
+    "Initial": "GIC",
+    "Gender": "L",
+    "BDS Team": "BDSM",
+    "Birthday Date": "03-May",
+    "Player ID": 793,
+    "Team": 7
+  },
+  {
+    "Name": "Yanditya Ekaputra Dwipada",
+    "Initial": "YEP",
+    "Gender": "L",
+    "BDS Team": "BTS",
+    "Birthday Date": "29-Jan",
+    "Player ID": 556,
+    "Team": 7
+  },
+  {
+    "Name": "Ahmad Haidar",
+    "Initial": "HDR",
+    "Gender": "L",
+    "BDS Team": "BDSM",
+    "Birthday Date": "08-Jan",
+    "Player ID": 848,
+    "Team": 8
+  },
+  {
+    "Name": "Emmanuella Poetri",
+    "Initial": "ELA",
+    "Gender": "P",
+    "BDS Team": "WIBU",
+    "Birthday Date": "09-Feb",
+    "Player ID": 521,
+    "Team": 8
+  },
+  {
+    "Name": "Ethan Wang",
+    "Initial": "ETW",
+    "Gender": "L",
+    "BDS Team": "BDSM",
+    "Birthday Date": "11-May",
+    "Player ID": 503,
+    "Team": 8
+  },
+  {
+    "Name": "Gregorius Oscar",
+    "Initial": "GRE",
+    "Gender": "L",
+    "BDS Team": "BTS",
+    "Birthday Date": "16-May",
+    "Player ID": 785,
+    "Team": 8
+  },
+  {
+    "Name": "Amanda Ardianti",
+    "Initial": "MND",
+    "Gender": "P",
+    "BDS Team": "SQI",
+    "Birthday Date": "07-Mar",
+    "Player ID": 344,
+    "Team": 8
+  },
+  {
+    "Name": "Aldo Wisnu Pratama",
+    "Initial": "ALP",
+    "Gender": "L",
+    "BDS Team": "SQI",
+    "Birthday Date": "08-Apr",
+    "Player ID": 126,
+    "Team": 9
+  },
+  {
+    "Name": "Diana",
+    "Initial": "DYS",
+    "Gender": "P",
+    "BDS Team": "WIBU",
+    "Birthday Date": "23-Oct",
+    "Player ID": 459,
+    "Team": 9
+  },
+  {
+    "Name": "Handika Limanto",
+    "Initial": "LMN",
+    "Gender": "L",
+    "BDS Team": "SQI",
+    "Birthday Date": "13-Jan",
+    "Player ID": 234,
+    "Team": 9
+  },
+  {
+    "Name": "Muhammad Yusuf Alfianto",
+    "Initial": "MYA",
+    "Gender": "L",
+    "BDS Team": "BDSM",
+    "Birthday Date": "30-Jul",
+    "Player ID": 351,
+    "Team": 9
+  },
+  {
+    "Name": "Putu Gede Sanchia Jodie Mantra",
+    "Initial": "JOD",
+    "Gender": "L",
+    "BDS Team": "WIBU",
+    "Birthday Date": "08-Sep",
+    "Player ID": 54,
+    "Team": 9
+  },
+  {
+    "Name": "Agnesia",
+    "Initial": "ABG",
+    "Gender": "P",
+    "BDS Team": "WIBU",
+    "Birthday Date": "28-Aug",
+    "Player ID": 127,
+    "Team": 10
+  },
+  {
+    "Name": "Leon Chrisdion",
+    "Initial": "LEC",
+    "Gender": "L",
+    "BDS Team": "BTS",
+    "Birthday Date": "21-Jun",
+    "Player ID": 253,
+    "Team": 10
+  },
+  {
+    "Name": "Giovanichua",
+    "Initial": "GCH",
+    "Gender": "P",
+    "BDS Team": "WIBU",
+    "Birthday Date": "24-Feb",
+    "Player ID": 738,
+    "Team": 10
+  },
+  {
+    "Name": "Natashya Amartya Suluh",
+    "Initial": "TAS",
+    "Gender": "P",
+    "BDS Team": "WIBU",
+    "Birthday Date": "15-Jan",
+    "Player ID": 19,
+    "Team": 10
+  },
+  {
+    "Name": "Nathanael Aldo Phillip",
+    "Initial": "NAO",
+    "Gender": "L",
+    "BDS Team": "BTS",
+    "Birthday Date": "28-Apr",
+    "Player ID": 415,
+    "Team": 10
+  },
+  {
+    "Name": "Januardi",
+    "Initial": "JND",
+    "Gender": "L",
+    "BDS Team": "WIBU",
+    "Birthday Date": "05-Jan",
+    "Player ID": 44,
+    "Team": 11
+  },
+  {
+    "Name": "Jidan Dhirayoga Gumbira",
+    "Initial": "JDG",
+    "Gender": "L",
+    "BDS Team": "WIBU",
+    "Birthday Date": "06-Feb",
+    "Player ID": 47,
+    "Team": 11
+  },
+  {
+    "Name": "Juan Sebastian Sihombing",
+    "Initial": "JSB",
+    "Gender": "L",
+    "BDS Team": "SQI",
+    "Birthday Date": "07-Jul",
+    "Player ID": 92,
+    "Team": 11
+  },
+  {
+    "Name": "Kevin Novian Prafajar",
+    "Initial": "KNP",
+    "Gender": "L",
+    "BDS Team": "WIBU",
+    "Birthday Date": "23-Nov",
+    "Player ID": 146,
+    "Team": 11
+  },
+  {
+    "Name": "Michael Alexander Ruslan",
+    "Initial": "LEX",
+    "Gender": "L",
+    "BDS Team": "BTS",
+    "Birthday Date": "05-Nov",
+    "Player ID": 254,
+    "Team": 11
+  },
+  {
+    "Name": "Angel Alicya Lumiana Napitupulu",
+    "Initial": "NPL",
+    "Gender": "P",
+    "BDS Team": "BDSM",
+    "Birthday Date": "12-Aug",
+    "Player ID": 462,
+    "Team": 12
+  },
+  {
+    "Name": "Cindy Priscilla",
+    "Initial": "CDY",
+    "Gender": "P",
+    "BDS Team": "BDSM",
+    "Birthday Date": "29-February",
+    "Player ID": 345,
+    "Team": 12
+  },
+  {
+    "Name": "Khairunnisa Zhafira",
+    "Initial": "CHA",
+    "Gender": "P",
+    "BDS Team": "BTS",
+    "Birthday Date": "07-Mar",
+    "Player ID": 381,
+    "Team": 12
+  },
+  {
+    "Name": "Regina Faustine",
+    "Initial": "GNA",
+    "Gender": "P",
+    "BDS Team": "BTS",
+    "Birthday Date": "08-Feb",
+    "Player ID": 741,
+    "Team": 12
+  }
+]

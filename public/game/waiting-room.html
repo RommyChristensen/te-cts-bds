@@ -166,6 +166,12 @@
             border: 1px solid rgba(255, 193, 7, 0.3);
         }
 
+        .team-status.playing {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
         .team-status.complete {
             background: rgba(81, 207, 102, 0.2);
             color: #51cf66;
@@ -572,6 +578,14 @@
                     <div class="admin-buttons">
                         <button class="start-button" id="adminStartButton" onclick="startGameAsAdmin()">Start Game</button>
                         <button class="end-button" onclick="endGame()">End Game</button>
+                    </div>
+                    
+                    <div id="gameProgressPanel" style="margin-top: 1rem; display: none;">
+                        <h5 style="color: #ffffff; margin-bottom: 0.5rem;">🎮 Game Progress</h5>
+                        <div id="progressStatus" style="color: #c0c0c0; font-size: 0.9rem; margin-bottom: 0.5rem;">Waiting for game to start...</div>
+                        <div id="teamProgressList" style="max-height: 200px; overflow-y: auto;">
+                            <!-- Team progress will be displayed here -->
+                        </div>
                     </div>
                 </div>
 
@@ -1397,6 +1411,134 @@
             }
         }
 
+        function updateGameProgress(progressData) {
+            if (!gameData) return;
+            
+            console.log('🎮 Updating game progress:', progressData);
+            
+            // Show progress panel for admin
+            if (isAdmin) {
+                const progressPanel = document.getElementById('gameProgressPanel');
+                const progressStatus = document.getElementById('progressStatus');
+                const teamProgressList = document.getElementById('teamProgressList');
+                
+                if (progressPanel) {
+                    progressPanel.style.display = 'block';
+                }
+                
+                if (progressStatus && progressData.gameStatus) {
+                    switch (progressData.gameStatus) {
+                        case 'starting':
+                            progressStatus.textContent = '🚀 Game is starting...';
+                            break;
+                        case 'playing':
+                            progressStatus.textContent = '🎮 Game in progress...';
+                            break;
+                        case 'finished':
+                            progressStatus.textContent = '🏁 Game completed!';
+                            break;
+                        default:
+                            progressStatus.textContent = '⏳ Waiting for game to start...';
+                    }
+                }
+                
+                if (teamProgressList && progressData.teamProgress) {
+                    teamProgressList.innerHTML = '';
+                    
+                    Object.entries(progressData.teamProgress).forEach(([teamName, progress]) => {
+                        const progressItem = document.createElement('div');
+                        progressItem.style.cssText = `
+                            padding: 0.5rem;
+                            margin: 0.25rem 0;
+                            background: rgba(255, 255, 255, 0.05);
+                            border-radius: 5px;
+                            border-left: 4px solid ${progress.completed ? '#51cf66' : progress.started ? '#ffc107' : '#666'};
+                        `;
+                        
+                        progressItem.innerHTML = `
+                            <div style="font-weight: 600; color: #ffffff;">${teamName}</div>
+                            <div style="font-size: 0.8rem; color: #c0c0c0;">
+                                ${progress.player ? `Player: ${progress.player.nama}` : 'No player'}
+                                ${progress.completed ? '✅ Completed' : progress.started ? '⏳ Playing' : '⏸️ Waiting'}
+                                ${progress.time ? `Time: ${(progress.time/1000).toFixed(1)}s` : ''}
+                                ${progress.answer ? `Answer: ${progress.answer}` : ''}
+                            </div>
+                        `;
+                        
+                        teamProgressList.appendChild(progressItem);
+                    });
+                }
+            }
+            
+            // Update team status based on game progress
+            if (progressData.teamProgress) {
+                gameData.teams.forEach(team => {
+                    const teamName = team.team_name;
+                    const teamProgress = progressData.teamProgress[teamName];
+                    
+                    if (teamProgress) {
+                        const statusBadge = document.getElementById(`status-${teamName.replace(/\s+/g, '-')}`);
+                        const playersList = document.getElementById(`players-${teamName.replace(/\s+/g, '-')}`);
+                        
+                        if (statusBadge) {
+                            if (teamProgress.completed) {
+                                statusBadge.textContent = '✓ Completed';
+                                statusBadge.className = 'team-status complete';
+                            } else if (teamProgress.started) {
+                                statusBadge.textContent = '⏳ Playing';
+                                statusBadge.className = 'team-status playing';
+                            } else {
+                                statusBadge.textContent = '⏸️ Waiting';
+                                statusBadge.className = 'team-status incomplete';
+                            }
+                        }
+                        
+                        if (playersList && teamProgress.player) {
+                            // Update individual player status
+                            const playerItems = playersList.querySelectorAll('.player-item');
+                            playerItems.forEach(item => {
+                                const playerName = item.querySelector('.player-name')?.textContent;
+                                if (playerName === teamProgress.player.nama) {
+                                    const statusSpan = item.querySelector('.player-status');
+                                    if (statusSpan) {
+                                        if (teamProgress.completed) {
+                                            statusSpan.textContent = '✓ Finished';
+                                            statusSpan.style.color = '#51cf66';
+                                        } else if (teamProgress.started) {
+                                            statusSpan.textContent = '⏳ Playing';
+                                            statusSpan.style.color = '#ffc107';
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+            
+            // Update overall game status
+            const statusMessage = document.getElementById('statusMessage');
+            if (statusMessage && progressData.gameStatus) {
+                switch (progressData.gameStatus) {
+                    case 'starting':
+                        statusMessage.textContent = 'Game is starting...';
+                        statusMessage.style.background = 'rgba(255, 193, 7, 0.2)';
+                        statusMessage.style.color = '#ffc107';
+                        break;
+                    case 'playing':
+                        statusMessage.textContent = 'Game in progress...';
+                        statusMessage.style.background = 'rgba(76, 175, 80, 0.2)';
+                        statusMessage.style.color = '#4CAF50';
+                        break;
+                    case 'finished':
+                        statusMessage.textContent = 'Game completed!';
+                        statusMessage.style.background = 'rgba(81, 207, 102, 0.2)';
+                        statusMessage.style.color = '#51cf66';
+                        break;
+                }
+            }
+        }
+
         function showNotification(message) {
             console.log('📢 Showing notification:', message);
             console.log('👤 Current user:', currentUser);
@@ -1535,6 +1677,56 @@
             // Disable start button
             const adminStartButton = document.getElementById('adminStartButton');
             if (adminStartButton) adminStartButton.disabled = true;
+            
+            // Show progress panel for admin
+            if (isAdmin) {
+                console.log('👨‍💼 Showing progress panel for admin...');
+                const progressPanel = document.getElementById('gameProgressPanel');
+                if (progressPanel) {
+                    progressPanel.style.display = 'block';
+                }
+                
+                // Update status message for admin
+                const progressStatus = document.getElementById('progressStatus');
+                if (progressStatus) {
+                    progressStatus.textContent = '🎮 Game in progress... Monitoring player activities';
+                }
+            }
+        });
+
+        socket.on('redirect-to-game', (data) => {
+            console.log('🔄 Redirecting to game loader:', data.url);
+            window.location.href = data.url;
+        });
+
+        socket.on('game-progress', (data) => {
+            console.log('🎮 Game progress update:', data);
+            updateGameProgress(data);
+        });
+
+        socket.on('answer-submitted', (data) => {
+            console.log('🎯 Answer submitted notification:', data);
+            
+            // Show immediate notification to admin
+            if (isAdmin) {
+                const message = `🎯 ${data.teamName} - ${data.user.nama} submitted: ${data.answer} ${data.correct ? '✅' : '❌'} (${(data.time/1000).toFixed(1)}s)`;
+                showNotification(message, data.correct ? 'success' : 'warning');
+                
+                // Update progress immediately
+                updateGameProgress({
+                    gameStatus: 'playing',
+                    teamProgress: {
+                        [data.teamName]: {
+                            started: true,
+                            completed: data.correct,
+                            player: data.user,
+                            answer: data.answer,
+                            correct: data.correct,
+                            time: data.time
+                        }
+                    }
+                });
+            }
         });
 
         socket.on('game-ended', (data) => {
@@ -1556,6 +1748,20 @@
                             playersList.innerHTML = '<li class="player-item empty-state">Menunggu pemain...</li>';
                         }
                     });
+                }
+            }
+        });
+
+        socket.on('currency-change', (data) => {
+            console.log('💰 Currency change received:', data);
+            // Update current user's currency if it matches
+            if (currentUser && data.username === currentUser.username) {
+                currentUser.currency = data.amount;
+                console.log(`✅ Updated ${currentUser.username} currency to ${data.amount} coins`);
+                
+                // Show notification for currency change
+                if (data.reason === 'reward') {
+                    showNotification(`💰 +${data.change} coins received! Total: ${data.amount}`, 'success');
                 }
             }
         });

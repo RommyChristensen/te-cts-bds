@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Game Portal - Loading...</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 50%, #262626 100%);
+            min-height: 100vh;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 2rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #4CAF50;
+        }
+
+        .loading-subtitle {
+            font-size: 1rem;
+            color: #c0c0c0;
+            margin-bottom: 2rem;
+        }
+
+        .error-container {
+            display: none;
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid #f44336;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem;
+            text-align: center;
+        }
+
+        .error-title {
+            color: #f44336;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .error-message {
+            color: #ffffff;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-secondary {
+            background: #555;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #666;
+            transform: translateY(-2px);
+        }
+
+        .game-container {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+
+        .game-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .game-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #4CAF50;
+        }
+
+        .player-info {
+            font-size: 0.9rem;
+            color: #c0c0c0;
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        .game-content {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        #gameCanvas {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .timer {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4CAF50;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 2000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: rgba(244, 67, 54, 0.9);
+        }
+
+        .notification.warning {
+            background: rgba(255, 152, 0, 0.9);
+        }
+
+        @media (max-width: 768px) {
+            .game-header {
+                flex-direction: column;
+                gap: 0.5rem;
+                padding: 0.5rem;
+            }
+
+            .game-content {
+                top: 100px;
+            }
+
+            .timer {
+                top: 120px;
+                right: 10px;
+                font-size: 1.2rem;
+            }
+
+            .btn-small {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-container" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loadingText">Memuat Game...</div>
+        <div class="loading-subtitle" id="loadingSubtitle">Mempersiapkan arena pertandingan</div>
+    </div>
+
+    <!-- Error Screen -->
+    <div class="error-container" id="errorScreen">
+        <div class="error-title">❌ Error Loading Game</div>
+        <div class="error-message" id="errorMessage">Game tidak dapat dimuat</div>
+        <button class="btn btn-primary" onclick="retryLoading()">Coba Lagi</button>
+        <button class="btn btn-secondary" onclick="backToDashboard()">Kembali ke Dashboard</button>
+    </div>
+
+    <!-- Game Container -->
+    <div class="game-container" id="gameContainer">
+        <div class="game-header">
+            <div class="game-info">
+                <div class="game-title" id="gameTitle">Game Name</div>
+                <div class="player-info" id="playerInfo">Player: Team</div>
+            </div>
+            <div class="game-controls">
+                <button class="btn btn-small btn-secondary" onclick="toggleFullscreen()">🖥️ Fullscreen</button>
+                <button class="btn btn-small btn-secondary" onclick="leaveGame()">🚪 Keluar</button>
+            </div>
+        </div>
+        
+        <div class="game-content">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+        
+        <div class="timer" id="gameTimer">00:00</div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <script>
+        // Global variables
+        let socket;
+        let currentUser = null;
+        let currentGame = null;
+        let gameInstance = null;
+        let gameTimer = null;
+        let timeRemaining = 0;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Get user info
+                currentUser = await getUserInfo();
+                if (!currentUser) {
+                    redirectToLogin();
+                    return;
+                }
+
+                // Connect to socket
+                socket = io();
+                setupSocketListeners();
+
+                // Get active game
+                currentGame = await getActiveGame();
+                if (!currentGame) {
+                    showError('Tidak ada game aktif');
+                    return;
+                }
+
+                // Load game
+                await loadGame();
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showError('Gagal menginisialisasi game: ' + error.message);
+            }
+        });
+
+        // Get user info
+        async function getUserInfo() {
+            try {
+                const response = await fetch('/api/user-info');
+                if (response.ok) {
+                    return await response.json();
+                }
+                return null;
+            } catch (error) {
+                console.error('Error getting user info:', error);
+                return null;
+            }
+        }
+
+        // Get active game
+        async function getActiveGame() {
+            try {
+                const response = await fetch('/api/active-game');
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.game;
+                }
+                return null;
+            } catch (error) {
+                console.error('Error getting active game:', error);
+                return null;
+            }
+        }
+
+        // Load game
+        async function loadGame() {
+            try {
+                if (!currentGame.file_name) {
+                    throw new Error('Game file name not specified');
+                }
+
+                updateLoadingText(`Memuat ${currentGame.name}...`);
+
+                // Load game script
+                const scriptPath = `/games/${currentGame.file_name}`;
+                await loadScript(scriptPath);
+
+                // Initialize game
+                if (window.GameInstance) {
+                    gameInstance = new window.GameInstance({
+                        canvas: document.getElementById('gameCanvas'),
+                        socket: socket,
+                        user: currentUser,
+                        game: currentGame
+                    });
+
+                    // Setup game event listeners
+                    gameInstance.on('ready', () => {
+                        showGameScreen();
+                        updateGameInfo();
+                    });
+
+                    gameInstance.on('error', (error) => {
+                        showError('Game error: ' + error.message);
+                    });
+
+                    gameInstance.on('gameOver', (result) => {
+                        handleGameOver(result);
+                    });
+
+                    // Start game
+                    gameInstance.init();
+                } else {
+                    throw new Error('Game class not found');
+                }
+
+            } catch (error) {
+                console.error('Error loading game:', error);
+                showError('Gagal memuat game: ' + error.message);
+            }
+        }
+
+        // Load script dynamically
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+                document.head.appendChild(script);
+            });
+        }
+
+        // Setup socket listeners
+        function setupSocketListeners() {
+            socket.on('connect', () => {
+                console.log('Connected to server');
+                // Authenticate
+                socket.emit('authenticate', {
+                    userType: currentUser.isAdmin ? 'admin' : 'user',
+                    username: currentUser.username
+                });
+            });
+
+            socket.on('game-started', (data) => {
+                if (gameInstance && gameInstance.start) {
+                    gameInstance.start();
+                    startTimer();
+                }
+            });
+
+            socket.on('game-ended', (data) => {
+                if (gameInstance && gameInstance.end) {
+                    gameInstance.end();
+                }
+                stopTimer();
+            });
+
+            socket.on('game-activity', (data) => {
+                if (gameInstance && gameInstance.onGameActivity) {
+                    gameInstance.onGameActivity(data);
+                }
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Disconnected from server');
+                showNotification('Koneksi terputus', 'warning');
+            });
+        }
+
+        // UI Functions
+        function updateLoadingText(text) {
+            document.getElementById('loadingText').textContent = text;
+        }
+
+        function updateLoadingSubtitle(subtitle) {
+            document.getElementById('loadingSubtitle').textContent = subtitle;
+        }
+
+        function showGameScreen() {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('errorScreen').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+        }
+
+        function showError(message) {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'none';
+            document.getElementById('errorScreen').style.display = 'block';
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        function updateGameInfo() {
+            if (currentGame) {
+                document.getElementById('gameTitle').textContent = currentGame.name;
+                document.getElementById('playerInfo').textContent = 
+                    `${currentUser.nama} - ${currentUser.tim || 'No Team'}`;
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Timer functions
+        function startTimer() {
+            if (currentGame && currentGame.duration) {
+                timeRemaining = currentGame.duration * 60; // Convert to seconds
+                updateTimerDisplay();
+                
+                gameTimer = setInterval(() => {
+                    timeRemaining--;
+                    updateTimerDisplay();
+                    
+                    if (timeRemaining <= 0) {
+                        stopTimer();
+                        if (gameInstance && gameInstance.onTimeUp) {
+                            gameInstance.onTimeUp();
+                        }
+                    }
+                }, 1000);
+            }
+        }
+
+        function stopTimer() {
+            if (gameTimer) {
+                clearInterval(gameTimer);
+                gameTimer = null;
+            }
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('gameTimer').textContent = display;
+        }
+
+        // Control functions
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function leaveGame() {
+            if (confirm('Apakah Anda yakin ingin keluar dari game?')) {
+                window.location.href = '/user-dashboard';
+            }
+        }
+
+        function retryLoading() {
+            location.reload();
+        }
+
+        function backToDashboard() {
+            window.location.href = '/user-dashboard';
+        }
+
+        function redirectToLogin() {
+            window.location.href = '/';
+        }
+
+        function handleGameOver(result) {
+            stopTimer();
+            showNotification('Game Selesai! Menunggu admin untuk mengakhiri game...', 'success');
+            
+            // Don't redirect automatically - wait for admin to end game and distribute rewards
+            console.log('🎮 Game completed, waiting for admin actions...');
+        }
+
+        // Listen for admin actions
+        let gameEnded = false;
+        let rewardsData = null;
+
+        socket.on('game-ended', (data) => {
+            console.log('🏁 Game ended by admin');
+            gameEnded = true;
+            checkAndRedirect();
+        });
+
+        socket.on('rewards-distributed', (data) => {
+            console.log('🎁 Rewards distributed by admin:', data);
+            rewardsData = data;
+            checkAndRedirect();
+        });
+
+        function checkAndRedirect() {
+            if (gameEnded && rewardsData) {
+                console.log('✅ Both game ended and rewards distributed, redirecting to result page...');
+                
+                // Encode rewards data as URL parameter
+                const encodedData = btoa(JSON.stringify(rewardsData));
+                const resultUrl = `/game/result?results=${encodedData}`;
+                console.log('🔗 Redirecting to:', resultUrl);
+                
+                window.location.href = resultUrl;
+            }
+        }
+
+        // Handle page unload
+        window.addEventListener('beforeunload', () => {
+            if (gameInstance && gameInstance.cleanup) {
+                gameInstance.cleanup();
+            }
+            stopTimer();
+        });
+    </script>
+</body>
+</html>

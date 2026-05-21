@@ -22,6 +22,8 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
+app.use('/games', express.static('public/games'));
+app.use('/data', express.static('data'));
 app.use(session({
   secret: 'game-secret-key',
   resave: false,
@@ -31,6 +33,7 @@ app.use(session({
 
 // Game state
 let gamePlayers = new Map(); // Track players in current game
+let completedPlayers = new Map(); // Track players who completed games (for rewards)
 let activeGame = null;
 
 // Routes
@@ -73,8 +76,18 @@ app.get('/game/:gameName', (req, res) => {
     return res.redirect('/');
   }
   
-  // Always use the universal waiting room
+  // Use the waiting room first
   res.sendFile(path.join(__dirname, 'public', 'game', 'waiting-room.html'));
+});
+
+// Game loader route (protected)
+app.get('/game-loader', (req, res) => {
+  // Allow both users and admins to access game loader
+  if (!req.session.user && !req.session.admin) {
+    return res.redirect('/');
+  }
+  
+  res.sendFile(path.join(__dirname, 'public', 'game', 'game-loader.html'));
 });
 
 // API Routes
@@ -536,7 +549,43 @@ io.on('connection', (socket) => {
       io.emit('game-started', { game: activeGame });
       io.emit('game-activity', { type: 'game_started', game: activeGame });
       console.log('Game started by admin:', socket.username);
+      
+      // Emit game progress update to all
+      io.emit('game-progress', { 
+        gameStatus: 'starting',
+        teamProgress: {}
+      });
+      
+      // Redirect only players (not admin) to game loader
+      socket.broadcast.emit('redirect-to-game', { url: '/game-loader' });
+      console.log('Redirecting players to game loader, admin stays for monitoring');
     }
+  });
+
+  socket.on('game-progress', (data) => {
+    console.log('Game progress update:', data);
+    // Broadcast progress to all clients
+    io.emit('game-progress', data);
+  });
+
+  socket.on('answer-submitted', (data) => {
+    console.log('🎯 Answer submitted:', data);
+    
+    // Add to completed players if answer is correct and not already tracked
+    if (data.correct && !completedPlayers.has(data.user.username)) {
+      completedPlayers.set(data.user.username, {
+        ...data.user,
+        team: data.teamName || data.user.tim,
+        completedAt: Date.now(),
+        answer: data.answer,
+        time: data.time
+      });
+      console.log(`✅ Player ${data.user.nama} (${data.user.username}) added to completed players`);
+      console.log(`📊 Total completed players: ${completedPlayers.size}`);
+    }
+    
+    // Broadcast to all clients for immediate admin notification
+    io.emit('answer-submitted', data);
   });
 
   socket.on('end-game', (data) => {
@@ -584,17 +633,24 @@ io.on('connection', (socket) => {
           console.log(`  - ${teamName}: ${amount} coins (Rank #${rank})`);
         });
         
+        // Use completedPlayers if gamePlayers is empty (players may have disconnected)
+        const playersToReward = gamePlayers.size > 0 ? gamePlayers : completedPlayers;
+        
+        console.log(`📊 Using ${playersToReward === gamePlayers ? 'gamePlayers' : 'completedPlayers'} for reward distribution`);
+        console.log(`👥 Players to reward: ${playersToReward.size}`);
+        
         // Distribute rewards to players with ranking information
-        for (const [username, player] of gamePlayers) {
-          console.log(`🔍 Checking player ${player.nama} from team ${player.tim}`);
+        for (const [username, player] of playersToReward) {
+          console.log(`🔍 Checking player ${player.nama} from team ${player.team || player.tim}`);
           
-          if (player.tim && rewards[player.tim]) {
-            const teamReward = rewards[player.tim].amount || rewards[player.tim];
-            const teamRank = rewards[player.tim].rank || 0;
-            const teamPlayers = Array.from(gamePlayers.values()).filter(p => p.tim === player.tim);
+          const playerTeam = player.team || player.tim;
+          if (playerTeam && rewards[playerTeam]) {
+            const teamReward = rewards[playerTeam].amount || rewards[playerTeam];
+            const teamRank = rewards[playerTeam].rank || 0;
+            const teamPlayers = Array.from(playersToReward.values()).filter(p => (p.team || p.tim) === playerTeam);
             const perPlayerReward = Math.floor(teamReward / teamPlayers.length);
             
-            console.log(`💰 Team ${player.tim} reward: ${teamReward} coins, ${teamPlayers.length} players, ${perPlayerReward} coins each`);
+            console.log(`💰 Team ${playerTeam} reward: ${teamReward} coins, ${teamPlayers.length} players, ${perPlayerReward} coins each`);
             
             if (perPlayerReward > 0) {
               // Update player currency in database
@@ -606,33 +662,43 @@ io.on('connection', (socket) => {
                 await GameResultModel.create({
                   game_id: activeGame.id,
                   username: username,
-                  team: player.tim,
+                  team: playerTeam,
                   rank: teamRank,
                   reward: perPlayerReward
                 });
               }
               
+              // Emit currency change to update player's balance in real-time
+              io.emit('currency-change', { 
+                username: username, 
+                amount: currency.amount,
+                oldBalance: oldBalance,
+                change: perPlayerReward,
+                reason: 'reward'
+              });
+              
               distributedPlayers.push({
                 username: username,
                 nama: player.nama,
-                tim: player.tim,
+                tim: playerTeam,
                 reward: perPlayerReward,
                 rank: teamRank
               });
               
               const rankEmoji = teamRank === 1 ? '🥇' : teamRank === 2 ? '🥈' : teamRank === 3 ? '🥉' : '🏅';
-              console.log(`✅ ${player.nama} (${player.tim}) Rank #${teamRank}: ${oldBalance} → ${currency.amount} coins (+${perPlayerReward}) ${rankEmoji}`);
+              console.log(`✅ ${player.nama} (${playerTeam}) Rank #${teamRank}: ${oldBalance} → ${currency.amount} coins (+${perPlayerReward}) ${rankEmoji}`);
             } else {
               console.log(`⚠️ ${player.nama} gets 0 coins (perPlayerReward = ${perPlayerReward})`);
             }
           } else {
-            console.log(`❌ ${player.nama} (${player.tim}) - no reward configured for team ${player.tim}`);
+            console.log(`❌ ${player.nama} (${playerTeam}) - no reward configured for team ${playerTeam}`);
           }
         }
         
         // Clear game players after distribution
         gamePlayers.clear();
-        console.log('🧹 Game players cleared after reward distribution');
+        completedPlayers.clear();
+        console.log('🧹 Game players and completed players cleared after reward distribution');
         
         // Notify all clients about rewards with ranking
         console.log('📡 Broadcasting rewards to all clients...');

@@ -473,8 +473,8 @@
                         resultsData = JSON.parse(decodedResults);
                         console.log('✅ Results data loaded from URL:', resultsData);
                         
-                        // Validate results data
-                        if (resultsData && resultsData.players && resultsData.players.length > 0) {
+                        // Validate results data - accept rewards data even without players array
+                        if (resultsData && (resultsData.rewards || resultsData.players)) {
                             console.log('✅ Results data validation passed');
                             return;
                         } else {
@@ -500,11 +500,31 @@
                         socket.emit('authenticate', { userType, username });
                     });
 
+                    socket.on('game-ended', (data) => {
+                        console.log('🏁 Game ended, loading results...');
+                        // Game ended - wait for rewards data or use fallback
+                        setTimeout(() => {
+                            if (!resultsData) {
+                                console.log('⚠️ No rewards data, showing empty results');
+                                resolve();
+                            }
+                        }, 2000);
+                    });
+
                     socket.on('rewards-distributed', (data) => {
                         console.log('🎁 Results data received via socket:', data);
                         resultsData = data;
                         console.log('✅ Results data loaded via socket');
                         resolve();
+                    });
+
+                    socket.on('currency-change', (data) => {
+                        console.log('💰 Currency change received:', data);
+                        // Update current user's currency if it matches
+                        if (currentUser && data.username === currentUser.username) {
+                            currentUser.currency = data.amount;
+                            console.log(`✅ Updated ${currentUser.username} currency to ${data.amount} coins`);
+                        }
                     });
 
                     // Timeout after 10 seconds
@@ -533,7 +553,7 @@
             document.getElementById('loadingState').style.display = 'none';
             
             // Check if we have valid data
-            if (!resultsData || !resultsData.players || resultsData.players.length === 0) {
+            if (!resultsData || (!resultsData.players && !resultsData.rewards)) {
                 console.log('❌ No valid results data, showing error state');
                 showError();
                 return;
@@ -566,26 +586,38 @@
 
         // Create ranking cards
         function createRankingCards() {
-            if (!resultsData || !resultsData.players) return;
+            if (!resultsData || (!resultsData.players && !resultsData.rewards)) return;
 
             const rankingsGrid = document.getElementById('rankingsGrid');
             rankingsGrid.innerHTML = '';
 
-            // Group players by team and sort by rank
-            const teamData = {};
+            // Use rewards data if available, otherwise use players data
+            let teamData = {};
             
-            resultsData.players.forEach(player => {
-                const teamName = player.tim;
-                if (!teamData[teamName]) {
+            if (resultsData.rewards && Object.keys(resultsData.rewards).length > 0) {
+                // Use rewards data
+                Object.entries(resultsData.rewards).forEach(([teamName, rewardData]) => {
                     teamData[teamName] = {
-                        rank: player.rank || 0,
-                        players: [],
-                        totalReward: 0
+                        rank: rewardData.rank || 1,
+                        players: [], // No individual player data
+                        totalReward: rewardData.amount || 0
                     };
-                }
-                teamData[teamName].players.push(player);
-                teamData[teamName].totalReward += player.reward || 0;
-            });
+                });
+            } else if (resultsData.players && resultsData.players.length > 0) {
+                // Use players data (original logic)
+                resultsData.players.forEach(player => {
+                    const teamName = player.tim;
+                    if (!teamData[teamName]) {
+                        teamData[teamName] = {
+                            rank: player.rank || 0,
+                            players: [],
+                            totalReward: 0
+                        };
+                    }
+                    teamData[teamName].players.push(player);
+                    teamData[teamName].totalReward += player.reward || 0;
+                });
+            }
 
             // Sort teams by rank
             const sortedTeams = Object.entries(teamData)
@@ -605,12 +637,15 @@
                     <div class="rank-position ${rankClass}">Rank #${rankNumber}</div>
                     <div class="team-name">${teamName}</div>
                     <div class="players-list">
-                        ${data.players.map(player => `
-                            <div class="player-item">
-                                <span class="player-name">${player.nama}</span>
-                                <span class="player-reward">+${player.reward} coins</span>
-                            </div>
-                        `).join('')}
+                        ${data.players.length > 0 ? 
+                            data.players.map(player => `
+                                <div class="player-item">
+                                    <span class="player-name">${player.nama}</span>
+                                    <span class="player-reward">+${player.reward} coins</span>
+                                </div>
+                            `).join('') :
+                            '<div class="player-item"><span class="player-name">Team Reward Distributed</span></div>'
+                        }
                     </div>
                     <div class="team-total">
                         <div class="team-total-label">Team Total Reward</div>

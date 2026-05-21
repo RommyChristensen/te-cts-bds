@@ -57,6 +57,7 @@ class GameModel {
       duration = 5, 
       reward_coins = 0, 
       game_url = null,
+      file_name = null,
       teams = []
     } = game;
     const gameId = id || Date.now().toString();
@@ -68,8 +69,8 @@ class GameModel {
       
       // Insert game
       const gameResult = await client.query(
-        'INSERT INTO games (id, name, description, status, duration, reward_coins, game_url) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-        [gameId, name, description, status, duration, reward_coins, game_url]
+        'INSERT INTO games (id, name, description, status, duration, reward_coins, game_url, file_name) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+        [gameId, name, description, status, duration, reward_coins, game_url, file_name]
       );
       
       // Insert teams if provided

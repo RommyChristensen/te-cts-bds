@@ -15,10 +15,21 @@ class UserModel {
 
   // Create new user
   static async create(user) {
-    const { username, nama, tim, eliminated = false } = user;
+    const { 
+      username, 
+      nama, 
+      tim, 
+      eliminated = false,
+      name = null,
+      initial = null,
+      gender = null,
+      bds_team = null,
+      birthdate = null,
+      player_id = null
+    } = user;
     const result = await db.query(
-      'INSERT INTO users (username, nama, tim, eliminated) VALUES ($1, $2, $3, $4) RETURNING *',
-      [username, nama, tim, eliminated]
+      'INSERT INTO users (username, nama, tim, eliminated, name, initial, gender, bds_team, birthdate, player_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
+      [username, nama, tim, eliminated, name, initial, gender, bds_team, birthdate, player_id]
     );
     return result.rows[0];
   }
