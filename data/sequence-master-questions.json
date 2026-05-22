@@ -1,0 +1,62 @@
+[
+  {
+    "team": "Team 1",
+    "sequence": [10, 15, 42, 79, 148],
+    "answer": 259
+  },
+  {
+    "team": "Team 2",
+    "sequence": [12, 14, 41, 74, 138],
+    "answer": 239
+  },
+  {
+    "team": "Team 3",
+    "sequence": [8, 18, 45, 88, 164],
+    "answer": 289
+  },
+  {
+    "team": "Team 4",
+    "sequence": [15, 15, 44, 76, 140],
+    "answer": 239
+  },
+  {
+    "team": "Team 5",
+    "sequence": [20, 10, 53, 93, 183],
+    "answer": 320
+  },
+  {
+    "team": "Team 6",
+    "sequence": [5, 25, 46, 91, 161],
+    "answer": 280
+  },
+  {
+    "team": "Team 7",
+    "sequence": [18, 12, 48, 83, 159],
+    "answer": 275
+  },
+  {
+    "team": "Team 8",
+    "sequence": [11, 19, 50, 95, 177],
+    "answer": 310
+  },
+  {
+    "team": "Team 9",
+    "sequence": [14, 16, 47, 84, 156],
+    "answer": 269
+  },
+  {
+    "team": "Team 10",
+    "sequence": [9, 21, 52, 102, 190],
+    "answer": 335
+  },
+  {
+    "team": "Team 11",
+    "sequence": [16, 14, 49, 87, 165],
+    "answer": 286
+  },
+  {
+    "team": "Team 12",
+    "sequence": [13, 17, 45, 80, 146],
+    "answer": 250
+  }
+]

@@ -698,11 +698,11 @@
             console.log('🔄 Close or dashboard action...');
             
             if (currentUser && currentUser.isAdmin) {
-                console.log('👨‍💼 Admin - redirecting to dashboard...');
-                window.location.href = '/admin-dashboard.html';
+                console.log('👨‍💼 Admin - redirecting to admin dashboard...');
+                window.location.href = '/admin-dashboard';
             } else {
-                console.log('👤 Player - closing page...');
-                window.close();
+                console.log('👤 Player - redirecting to user dashboard...');
+                window.location.href = '/user-dashboard';
             }
         }
 
