@@ -130,5 +130,16 @@
       "5 - 7 - 6: Dua angka benar, tapi keduanya di posisi yang salah."
     ],
     "answer": "7 6 8"
+  },
+  {
+    "team": "Team 0",
+    "clues": [
+      "3 - 5 - 8: Satu angka benar dan penempatannya tepat.",
+      "3 - 2 - 6: Satu angka benar, tapi penempatannya salah.",
+      "8 - 7 - 3: Dua angka benar, tapi keduanya di posisi yang salah.",
+      "4 - 1 - 5: Tidak ada angka yang benar.",
+      "5 - 7 - 6: Dua angka benar, tapi keduanya di posisi yang salah."
+    ],
+    "answer": "0 0 0"
   }
 ]
