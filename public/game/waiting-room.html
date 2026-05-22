@@ -581,7 +581,6 @@
                     </div>
                     
                     <div id="gameProgressPanel" style="margin-top: 1rem; display: none;">
-                        <h5 style="color: #ffffff; margin-bottom: 0.5rem;">🎮 Game Progress</h5>
                         <div id="progressStatus" style="color: #c0c0c0; font-size: 0.9rem; margin-bottom: 0.5rem;">Waiting for game to start...</div>
                         <div id="teamProgressList" style="max-height: 200px; overflow-y: auto;">
                             <!-- Team progress will be displayed here -->
@@ -1443,18 +1442,30 @@
                 }
                 
                 if (teamProgressList && progressData.teamProgress) {
-                    teamProgressList.innerHTML = '';
-                    
+                    // Update or create progress items for each team
                     Object.entries(progressData.teamProgress).forEach(([teamName, progress]) => {
-                        const progressItem = document.createElement('div');
-                        progressItem.style.cssText = `
-                            padding: 0.5rem;
-                            margin: 0.25rem 0;
-                            background: rgba(255, 255, 255, 0.05);
-                            border-radius: 5px;
-                            border-left: 4px solid ${progress.completed ? '#51cf66' : progress.started ? '#ffc107' : '#666'};
-                        `;
+                        // Create unique ID for this team's progress item
+                        const itemId = `progress-${teamName.replace(/\s+/g, '-')}`;
+                        let progressItem = document.getElementById(itemId);
                         
+                        // If item doesn't exist, create it
+                        if (!progressItem) {
+                            progressItem = document.createElement('div');
+                            progressItem.id = itemId;
+                            progressItem.style.cssText = `
+                                padding: 0.5rem;
+                                margin: 0.25rem 0;
+                                background: rgba(255, 255, 255, 0.05);
+                                border-radius: 5px;
+                                border-left: 4px solid ${progress.completed ? '#51cf66' : progress.started ? '#ffc107' : '#666'};
+                            `;
+                            teamProgressList.appendChild(progressItem);
+                        }
+                        
+                        // Update the border color based on status
+                        progressItem.style.borderLeftColor = progress.completed ? '#51cf66' : progress.started ? '#ffc107' : '#666';
+                        
+                        // Update content
                         progressItem.innerHTML = `
                             <div style="font-weight: 600; color: #ffffff;">${teamName}</div>
                             <div style="font-size: 0.8rem; color: #c0c0c0;">
@@ -1464,8 +1475,15 @@
                                 ${progress.answer ? `Answer: ${progress.answer}` : ''}
                             </div>
                         `;
-                        
-                        teamProgressList.appendChild(progressItem);
+                    });
+                    
+                    // Remove items for teams that are no longer in progress
+                    const progressItems = teamProgressList.querySelectorAll('[id^="progress-"]');
+                    progressItems.forEach(item => {
+                        const teamName = item.id.replace('progress-', '').replace(/-/g, ' ');
+                        if (!progressData.teamProgress[teamName]) {
+                            item.remove();
+                        }
                     });
                 }
             }

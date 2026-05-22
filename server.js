@@ -36,6 +36,7 @@ let gamePlayers = new Map(); // Track players in current game
 let completedPlayers = new Map(); // Track players who completed games (for rewards)
 let recentActivity = []; // Track recent answer submissions as fallback
 let activeGame = null;
+let globalGameProgress = {}; // Track all teams' progress
 
 // Routes
 app.get('/', (req, res) => {
@@ -551,7 +552,8 @@ io.on('connection', (socket) => {
       io.emit('game-activity', { type: 'game_started', game: activeGame });
       console.log('Game started by admin:', socket.username);
       
-      // Emit game progress update to all
+      // Reset global game progress and emit update to all
+      globalGameProgress = {};
       io.emit('game-progress', { 
         gameStatus: 'starting',
         teamProgress: {}
@@ -565,8 +567,28 @@ io.on('connection', (socket) => {
 
   socket.on('game-progress', (data) => {
     console.log('Game progress update:', data);
-    // Broadcast progress to all clients
-    io.emit('game-progress', data);
+    
+    // Update global game progress with new data
+    if (data.teamProgress) {
+      // Merge new progress data with existing data (don't overwrite entire teams)
+      Object.entries(data.teamProgress).forEach(([teamName, progress]) => {
+        if (!globalGameProgress[teamName]) {
+          globalGameProgress[teamName] = {};
+        }
+        // Update only the fields that changed, preserve existing data
+        Object.assign(globalGameProgress[teamName], progress);
+      });
+      console.log('🎮 Updated global game progress:', JSON.stringify(globalGameProgress, null, 2));
+    }
+    
+    // Broadcast combined progress to all clients
+    const progressData = {
+      gameStatus: data.gameStatus,
+      teamProgress: globalGameProgress
+    };
+    
+    console.log('📡 Broadcasting game progress to all clients with', Object.keys(globalGameProgress).length, 'teams');
+    io.emit('game-progress', progressData);
   });
 
   socket.on('answer-submitted', (data) => {
@@ -609,7 +631,13 @@ io.on('connection', (socket) => {
       // Don't set game to inactive here - keep it active for result page
       // Only set inactive when admin closes the room
       
-      // Emit events
+      // Reset global game progress and emit events
+      globalGameProgress = {};
+      io.emit('game-progress', { 
+        gameStatus: 'finished',
+        teamProgress: {}
+      });
+      
       io.emit('game-ended', { game: activeGame });
       io.emit('game-activity', { type: 'game_ended', game: activeGame });
       

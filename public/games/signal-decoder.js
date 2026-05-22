@@ -21,15 +21,40 @@ class GameInstance {
         this.isFinished = false;
         this.submittedAnswer = null;
         
+        // Mobile detection and settings
+        this.isMobile = this.detectMobile();
+        this.showNumberPad = this.isMobile;
+        
         this.setupCanvas();
         this.loadQuestions();
     }
 
+    detectMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+               (window.innerWidth <= 768 && 'ontouchstart' in window);
+    }
+
     setupCanvas() {
-        this.canvas.width = 800;
-        this.canvas.height = 600;
+        // Responsive canvas sizing
+        if (this.isMobile) {
+            // Mobile dimensions
+            this.canvas.width = Math.min(window.innerWidth - 20, 400);
+            this.canvas.height = Math.min(window.innerHeight - 200, 600);
+        } else {
+            // Desktop dimensions
+            this.canvas.width = 800;
+            this.canvas.height = 600;
+        }
+        
         this.canvas.style.maxWidth = '100%';
         this.canvas.style.maxHeight = '100%';
+        this.canvas.style.border = '2px solid #4CAF50';
+        this.canvas.style.borderRadius = '8px';
+        
+        // Create number pad for mobile
+        if (this.isMobile) {
+            this.createNumberPad();
+        }
     }
 
     on(event, callback) {
@@ -42,6 +67,159 @@ class GameInstance {
     emit(event, data) {
         if (this.events[event]) {
             this.events[event].forEach(callback => callback(data));
+        }
+    }
+
+    createNumberPad() {
+        // Create number pad container with game theme
+        const padContainer = document.createElement('div');
+        padContainer.id = 'numberPad';
+        padContainer.style.cssText = `
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, #000000 0%, #1a1a1a 50%, #2d2d2d 100%);
+            border-top: 3px solid #4CAF50;
+            padding: 15px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.6);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        `;
+
+        // Create number rows
+        const rows = [
+            ['1', '2', '3'],
+            ['4', '5', '6'],
+            ['7', '8', '9'],
+            ['0', 'Clear', 'Enter']
+        ];
+
+        rows.forEach((row, rowIndex) => {
+            const rowDiv = document.createElement('div');
+            rowDiv.style.cssText = `
+                display: flex;
+                gap: 8px;
+                justify-content: center;
+                align-items: center;
+            `;
+
+            row.forEach((buttonText, colIndex) => {
+                const button = document.createElement('button');
+                button.textContent = buttonText;
+                
+                // Theme-based button styling
+                const isNumber = /^\d$/.test(buttonText);
+                const isEnter = buttonText === 'Enter';
+                const isClear = buttonText === 'Clear';
+                
+                button.style.cssText = `
+                    flex: 1;
+                    padding: ${isNumber ? '18px 12px' : '16px 8px'};
+                    font-size: ${isNumber ? '20px' : '14px'};
+                    font-weight: bold;
+                    font-family: 'Courier New', monospace;
+                    border: 2px solid ${isEnter ? '#4CAF50' : isClear ? '#f44336' : '#4CAF50'};
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: all 0.15s ease;
+                    background: ${isEnter ? 
+                        'linear-gradient(135deg, #4CAF50, #45a049)' : 
+                        isClear ? 
+                        'linear-gradient(135deg, #f44336, #da190b)' :
+                        'linear-gradient(135deg, #263238, #37474f)'
+                    };
+                    color: white;
+                    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+                    box-shadow: 0 3px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+                    min-height: 50px;
+                    position: relative;
+                    overflow: hidden;
+                `;
+
+                // Add inner glow effect
+                const innerGlow = document.createElement('div');
+                innerGlow.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%);
+                    pointer-events: none;
+                `;
+                button.appendChild(innerGlow);
+
+                // Enhanced hover effects
+                button.addEventListener('mouseenter', () => {
+                    button.style.transform = 'translateY(-2px)';
+                    button.style.boxShadow = '0 5px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3)';
+                    button.style.borderColor = isEnter ? '#66bb6a' : isClear ? '#ef5350' : '#66bb6a';
+                });
+
+                button.addEventListener('mouseleave', () => {
+                    button.style.transform = 'translateY(0)';
+                    button.style.boxShadow = '0 3px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)';
+                    button.style.borderColor = isEnter ? '#4CAF50' : isClear ? '#f44336' : '#4CAF50';
+                });
+
+                // Add click handler
+                button.addEventListener('click', () => {
+                    this.handleNumberPadClick(buttonText);
+                    // Click animation
+                    button.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        button.style.transform = 'translateY(0)';
+                    }, 100);
+                });
+
+                // Enhanced touch feedback for mobile
+                button.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    button.style.transform = 'scale(0.92)';
+                    button.style.boxShadow = '0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3)';
+                });
+
+                button.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    button.style.transform = 'scale(0.95)';
+                    button.style.boxShadow = '0 5px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3)';
+                    this.handleNumberPadClick(buttonText);
+                    
+                    setTimeout(() => {
+                        button.style.transform = 'translateY(0)';
+                        button.style.boxShadow = '0 3px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)';
+                    }, 150);
+                });
+
+                rowDiv.appendChild(button);
+            });
+
+            padContainer.appendChild(rowDiv);
+        });
+
+        // Add to body (fixed position)
+        document.body.appendChild(padContainer);
+        
+        // Add some padding to body to prevent content from being hidden behind keypad
+        document.body.style.paddingBottom = '280px';
+    }
+
+    handleNumberPadClick(buttonText) {
+        if (buttonText === 'Enter') {
+            this.submitAnswer();
+        } else if (buttonText === 'Clear') {
+            this.userAnswer = '';
+            if (!this.isFinished) {
+                this.render();
+            }
+        } else if (this.userAnswer.length < 3 && /^\d$/.test(buttonText)) {
+            this.userAnswer += buttonText;
+            if (!this.isFinished) {
+                this.render();
+            }
         }
     }
 
@@ -141,6 +319,18 @@ class GameInstance {
             }
         });
 
+        // Handle window resize for responsive behavior
+        window.addEventListener('resize', () => {
+            const wasMobile = this.isMobile;
+            this.isMobile = this.detectMobile();
+            
+            // Only recreate canvas if mobile status changed
+            if (wasMobile !== this.isMobile) {
+                this.setupCanvas();
+                this.render();
+            }
+        });
+
         // Track admin actions
         this.gameEnded = false;
         this.rewardsData = null;
@@ -188,10 +378,28 @@ class GameInstance {
                     started: true,
                     completed: false,
                     player: this.user,
-                    time: Date.now()
+                    time: 0 // Elapsed time starts at 0
                 }
             }
         });
+        
+        // Update progress every 500ms to show real-time elapsed time
+        this.progressInterval = setInterval(() => {
+            if (this.isRunning && !this.isFinished) {
+                const elapsedTime = Date.now() - this.startTime;
+                this.socket.emit('game-progress', {
+                    gameStatus: 'playing',
+                    teamProgress: {
+                        [`Team ${this.teamNumber}`]: {
+                            started: true,
+                            completed: false,
+                            player: this.user,
+                            time: elapsedTime
+                        }
+                    }
+                });
+            }
+        }, 500);
         
         // Notify server
         this.socket.emit('game-activity', {
@@ -206,6 +414,11 @@ class GameInstance {
         console.log('Ending The Signal Decoder game...');
         this.isRunning = false;
         this.gameState = 'finished';
+        
+        // Clear progress interval
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+        }
         
         if (!this.endTime) {
             this.endTime = Date.now();
@@ -362,48 +575,60 @@ class GameInstance {
     }
 
     drawGameScreen() {
-        // Timer
-        if (this.startTime) {
-            const elapsed = Date.now() - this.startTime;
-            const seconds = Math.floor(elapsed / 1000);
-            const minutes = Math.floor(seconds / 60);
-            const displaySeconds = seconds % 60;
-            
-            this.ctx.fillStyle = '#4CAF50';
-            this.ctx.font = 'bold 24px monospace';
-            this.ctx.textAlign = 'left';
-            this.ctx.fillText(`TIME: ${minutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`, 20, 40);
-        }
+        // Responsive font sizes
+        const titleSize = this.isMobile ? 24 : 36;
+        const morseSize = this.isMobile ? 28 : 40; // Smaller morse code
+        const timerSize = this.isMobile ? 18 : 24;
         
-        // Title
+        // Title with top margin
         this.ctx.fillStyle = '#4CAF50';
-        this.ctx.font = 'bold 36px Arial';
+        this.ctx.font = `bold ${titleSize}px Arial`;
         this.ctx.textAlign = 'center';
-        this.ctx.fillText('DECODE THIS SIGNAL', this.canvas.width / 2, 80);
+        const titleY = this.isMobile ? 80 : 100; // Added top margin
+        this.ctx.fillText('DECODE THIS SIGNAL', this.canvas.width / 2, titleY);
         
         // Team info
         this.ctx.fillStyle = '#FFF';
-        this.ctx.font = '18px Arial';
-        this.ctx.fillText(`Team ${this.teamNumber}`, this.canvas.width / 2, 110);
+        this.ctx.font = `${this.isMobile ? 16 : 18}px Arial`;
+        const teamY = this.isMobile ? 105 : 130; // Adjusted for title margin
+        this.ctx.fillText(`Team ${this.teamNumber}`, this.canvas.width / 2, teamY);
         
-        // Morse code display
+        // Morse code display - adjust for mobile
         this.ctx.fillStyle = '#FFC107';
-        this.ctx.font = 'bold 48px monospace';
-        this.ctx.fillText(this.currentQuestion.morse, this.canvas.width / 2, 200);
+        this.ctx.font = `bold ${morseSize}px monospace`;
         
-        // Hint
-        this.ctx.fillStyle = '#c0c0c0';
-        this.ctx.font = '16px Arial';
-        this.ctx.fillText(`Hint: ${this.currentQuestion.hint}`, this.canvas.width / 2, 240);
+        // Handle long morse code on mobile (removed hint, adjusted spacing)
+        let morseText = this.currentQuestion.morse;
+        if (this.isMobile && morseText.length > 20) {
+            // Break long morse code into multiple lines
+            const words = morseText.split(' ');
+            const midPoint = Math.ceil(words.length / 2);
+            const line1 = words.slice(0, midPoint).join(' ');
+            const line2 = words.slice(midPoint).join(' ');
+            
+            const morseY = this.isMobile ? 160 : 220; // Adjusted for no hint
+            this.ctx.fillText(line1, this.canvas.width / 2, morseY);
+            this.ctx.fillText(line2, this.canvas.width / 2, morseY + morseSize + 10);
+        } else {
+            const morseY = this.isMobile ? 160 : 220; // Adjusted for no hint
+            this.ctx.fillText(morseText, this.canvas.width / 2, morseY);
+        }
         
         // Answer input
         this.drawAnswerInput();
         
-        // Instructions
+        // Instructions - different for mobile vs desktop (added top margin)
         this.ctx.fillStyle = '#FFF';
-        this.ctx.font = '14px Arial';
-        this.ctx.fillText('Type 3 digits and press ENTER to submit', this.canvas.width / 2, 420);
-        this.ctx.fillText('Backspace to delete', this.canvas.width / 2, 440);
+        this.ctx.font = `${this.isMobile ? 12 : 14}px Arial`;
+        const instructionY = this.isMobile ? 300 : 440; // Added top margin
+        
+        if (this.isMobile) {
+            this.ctx.fillText('Use number pad below to enter answer', this.canvas.width / 2, instructionY);
+            this.ctx.fillText('Tap ENTER to submit, CLEAR to reset', this.canvas.width / 2, instructionY + 20);
+        } else {
+            this.ctx.fillText('Type 3 digits and press ENTER to submit', this.canvas.width / 2, instructionY);
+            this.ctx.fillText('Backspace to delete', this.canvas.width / 2, instructionY + 20);
+        }
         
         // Status
         if (this.isFinished) {
@@ -417,10 +642,12 @@ class GameInstance {
     }
 
     drawAnswerInput() {
-        const boxWidth = 300;
-        const boxHeight = 60;
+        // Responsive sizing
+        const boxWidth = this.isMobile ? 240 : 300;
+        const boxHeight = this.isMobile ? 50 : 60;
         const boxX = (this.canvas.width - boxWidth) / 2;
-        const boxY = 300;
+        const boxY = this.isMobile ? 230 : 300;
+        const digitSize = this.isMobile ? 28 : 36;
         
         // Draw input box
         this.ctx.strokeStyle = this.isFinished ? '#666' : '#4CAF50';
@@ -429,7 +656,7 @@ class GameInstance {
         
         // Draw answer digits
         this.ctx.fillStyle = '#FFF';
-        this.ctx.font = 'bold 36px monospace';
+        this.ctx.font = `bold ${digitSize}px monospace`;
         this.ctx.textAlign = 'center';
         
         for (let i = 0; i < 3; i++) {
@@ -539,6 +766,16 @@ class GameInstance {
     cleanup() {
         // Clean up event listeners
         document.removeEventListener('keydown', this.handleKeyDown);
+        
+        // Remove number pad if exists
+        const numberPad = document.getElementById('numberPad');
+        if (numberPad) {
+            numberPad.remove();
+        }
+        
+        // Reset body padding
+        document.body.style.paddingBottom = '0';
+        
         console.log('The Signal Decoder game cleaned up');
     }
 }
