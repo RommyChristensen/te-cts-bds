@@ -541,17 +541,17 @@ class GameInstance {
     }
 
     drawGameScreen() {
-        const titleSize = this.isMobile ? 24 : 36;
+        const titleSize = this.isMobile ? 20 : 36;
         
         this.ctx.fillStyle = '#FF9800';
         this.ctx.font = `bold ${titleSize}px Arial`;
         this.ctx.textAlign = 'center';
-        const titleY = this.isMobile ? 40 : 60;
+        const titleY = this.isMobile ? 30 : 60;
         this.ctx.fillText('FIND THE PATTERN', this.canvas.width / 2, titleY);
         
         this.ctx.fillStyle = '#FFF';
-        this.ctx.font = `${this.isMobile ? 14 : 16}px Arial`;
-        const teamY = this.isMobile ? 65 : 90;
+        this.ctx.font = `${this.isMobile ? 12 : 16}px Arial`;
+        const teamY = this.isMobile ? 50 : 90;
         this.ctx.fillText(`Team ${this.teamNumber}`, this.canvas.width / 2, teamY);
         
         // Draw sequence boxes
@@ -562,13 +562,13 @@ class GameInstance {
         
         // Instructions
         this.ctx.fillStyle = '#FFF';
-        this.ctx.font = `${this.isMobile ? 12 : 14}px Arial`;
+        this.ctx.font = `${this.isMobile ? 10 : 14}px Arial`;
         this.ctx.textAlign = 'center';
-        const instructionY = this.isMobile ? this.canvas.height - 80 : this.canvas.height - 60;
+        const instructionY = this.isMobile ? this.canvas.height - 100 : this.canvas.height - 60;
         
         if (this.isMobile) {
-            this.ctx.fillText('Use number pad below to enter answer', this.canvas.width / 2, instructionY);
-            this.ctx.fillText('Tap ENTER to submit, CLEAR to reset', this.canvas.width / 2, instructionY + 20);
+            this.ctx.fillText('Use number pad below', this.canvas.width / 2, instructionY);
+            this.ctx.fillText('ENTER to submit, CLEAR to reset', this.canvas.width / 2, instructionY + 15);
         } else {
             this.ctx.fillText('Type the next number and press ENTER to submit', this.canvas.width / 2, instructionY);
             this.ctx.fillText('Backspace to delete', this.canvas.width / 2, instructionY + 20);
@@ -578,24 +578,24 @@ class GameInstance {
         if (this.isFinished) {
             const isCorrect = parseInt(this.submittedAnswer) === this.currentQuestion.answer;
             this.ctx.fillStyle = isCorrect ? '#4CAF50' : '#F44336';
-            this.ctx.font = 'bold 24px Arial';
-            this.ctx.fillText(isCorrect ? 'CORRECT!' : 'WRONG! Try again...', this.canvas.width / 2, this.canvas.height - 20);
+            this.ctx.font = `bold ${this.isMobile ? 18 : 24}px Arial`;
+            this.ctx.fillText(isCorrect ? 'CORRECT!' : 'WRONG! Try again...', this.canvas.width / 2, this.canvas.height - 15);
         }
         
         this.drawSequenceBorder();
     }
 
     drawSequenceBoxes() {
-        const boxSize = this.isMobile ? 40 : 50;
-        const gap = this.isMobile ? 8 : 12;
-        const totalWidth = 5 * boxSize + 4 * gap;
+        const boxSize = this.isMobile ? 32 : 50;
+        const gap = this.isMobile ? 5 : 12;
+        const totalWidth = 6 * boxSize + 5 * gap;
         const startX = (this.canvas.width - totalWidth) / 2;
-        const startY = this.isMobile ? 120 : 160;
+        const startY = this.isMobile ? 75 : 160;
         
         this.ctx.fillStyle = '#c0c0c0';
-        this.ctx.font = `${this.isMobile ? 10 : 12}px Arial`;
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('Sequence:', startX - 40, startY + boxSize / 2 + 5);
+        this.ctx.font = `${this.isMobile ? 9 : 12}px Arial`;
+        this.ctx.textAlign = 'right';
+        this.ctx.fillText('Sequence:', startX - 5, startY + boxSize / 2 + 3);
         
         if (this.currentQuestion && this.currentQuestion.sequence) {
             this.currentQuestion.sequence.forEach((num, index) => {
@@ -604,43 +604,43 @@ class GameInstance {
                 
                 // Draw box
                 this.ctx.strokeStyle = '#FF9800';
-                this.ctx.lineWidth = 2;
+                this.ctx.lineWidth = this.isMobile ? 1.5 : 2;
                 this.ctx.strokeRect(x, y, boxSize, boxSize);
                 
                 // Draw number
                 this.ctx.fillStyle = '#FFF';
-                this.ctx.font = `bold ${this.isMobile ? 14 : 18}px monospace`;
+                this.ctx.font = `bold ${this.isMobile ? 11 : 18}px monospace`;
                 this.ctx.textAlign = 'center';
-                this.ctx.fillText(num, x + boxSize / 2, y + boxSize / 2 + 6);
+                this.ctx.fillText(num, x + boxSize / 2, y + boxSize / 2 + 4);
             });
             
             // Draw question mark for 6th number
             const x = startX + 5 * (boxSize + gap);
             const y = startY;
             this.ctx.strokeStyle = '#FFC107';
-            this.ctx.lineWidth = 2;
+            this.ctx.lineWidth = this.isMobile ? 1.5 : 2;
             this.ctx.strokeRect(x, y, boxSize, boxSize);
             this.ctx.fillStyle = '#FFC107';
-            this.ctx.font = `bold ${this.isMobile ? 18 : 24}px monospace`;
+            this.ctx.font = `bold ${this.isMobile ? 14 : 24}px monospace`;
             this.ctx.textAlign = 'center';
-            this.ctx.fillText('?', x + boxSize / 2, y + boxSize / 2 + 8);
+            this.ctx.fillText('?', x + boxSize / 2, y + boxSize / 2 + 5);
         }
     }
 
     drawAnswerInput() {
-        const boxWidth = this.isMobile ? 200 : 250;
-        const boxHeight = this.isMobile ? 50 : 60;
+        const boxWidth = this.isMobile ? 140 : 250;
+        const boxHeight = this.isMobile ? 40 : 60;
         const boxX = (this.canvas.width - boxWidth) / 2;
         const boxY = this.isMobile ? this.canvas.height - 240 : this.canvas.height - 220;
         
         this.ctx.strokeStyle = this.isFinished ? '#666' : '#FF9800';
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = this.isMobile ? 2 : 3;
         this.ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
         
         this.ctx.fillStyle = '#FFF';
-        this.ctx.font = `bold ${this.isMobile ? 24 : 32}px monospace`;
+        this.ctx.font = `bold ${this.isMobile ? 18 : 32}px monospace`;
         this.ctx.textAlign = 'center';
-        this.ctx.fillText(this.userAnswer || '_', boxX + boxWidth / 2, boxY + boxHeight / 2 + 10);
+        this.ctx.fillText(this.userAnswer || '_', boxX + boxWidth / 2, boxY + boxHeight / 2 + 8);
     }
 
     drawFinishedScreen() {
