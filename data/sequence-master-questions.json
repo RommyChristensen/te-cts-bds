@@ -61,7 +61,7 @@
   },
   {
     "team": "Team 0",
-    "sequence": [0, 0, 0, 0, 0],
-    "answer": 111
+    "sequence": [16, 14, 49, 87, 165],
+    "answer": 286
   }
 ]
