@@ -1444,6 +1444,12 @@
                 if (teamProgressList && progressData.teamProgress) {
                     // Update or create progress items for each team
                     Object.entries(progressData.teamProgress).forEach(([teamName, progress]) => {
+                        // Skip null or undefined team names
+                        if (!teamName || teamName === 'Team null' || teamName === 'undefined') {
+                            console.warn('Skipping invalid team name:', teamName);
+                            return;
+                        }
+                        
                         // Create unique ID for this team's progress item
                         const itemId = `progress-${teamName.replace(/\s+/g, '-')}`;
                         let progressItem = document.getElementById(itemId);
@@ -1720,6 +1726,21 @@
         socket.on('game-progress', (data) => {
             console.log('🎮 Game progress update:', data);
             updateGameProgress(data);
+        });
+
+        socket.on('timer-update', (data) => {
+            // Update timer display in admin panel
+            if (isAdmin) {
+                const totalSeconds = Math.floor(data.elapsed / 1000);
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                const timerDisplay = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                const progressStatus = document.getElementById('progressStatus');
+                if (progressStatus) {
+                    progressStatus.innerHTML = `🎮 Game in progress... ⏱️ Elapsed: ${timerDisplay}`;
+                }
+            }
         });
 
         socket.on('answer-submitted', (data) => {

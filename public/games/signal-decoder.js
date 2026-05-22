@@ -6,6 +6,8 @@ class GameInstance {
         this.socket = options.socket;
         this.user = options.user;
         this.game = options.game;
+        this.startTime = options.startTime || null;
+        console.log("startTime: " + (Date.now() - this.startTime));
         
         this.events = {};
         this.isRunning = false;
@@ -14,7 +16,6 @@ class GameInstance {
         // Game specific properties
         this.currentQuestion = null;
         this.userAnswer = '';
-        this.startTime = null;
         this.endTime = null;
         this.teamNumber = null;
         this.morseQuestions = [];
@@ -267,7 +268,7 @@ class GameInstance {
         this.setupControls();
         
         // Auto-start game for immediate play
-        this.start();
+        this.start(this.startTime);
         
         // Start render loop
         this.render();
@@ -364,12 +365,16 @@ class GameInstance {
         };
     }
 
-    start() {
+    start(persistentStartTime = null) {
         console.log('Starting The Signal Decoder game...');
         this.isRunning = true;
         this.gameState = 'playing';
-        this.startTime = Date.now();
+        // Use persistent start time from server if provided, otherwise use current time
+        this.startTime = persistentStartTime || Date.now();
+        console.log('⏱️ Game start time:', this.startTime, persistentStartTime ? '(from server)' : '(local)');
         
+        const elapsedTime = Date.now() - this.startTime;
+        console.log("elapsedTime: " + elapsedTime)
         // Notify server about game progress
         this.socket.emit('game-progress', {
             gameStatus: 'playing',
@@ -378,7 +383,7 @@ class GameInstance {
                     started: true,
                     completed: false,
                     player: this.user,
-                    time: 0 // Elapsed time starts at 0
+                    time: elapsedTime
                 }
             }
         });
@@ -577,8 +582,7 @@ class GameInstance {
     drawGameScreen() {
         // Responsive font sizes
         const titleSize = this.isMobile ? 24 : 36;
-        const morseSize = this.isMobile ? 28 : 40; // Smaller morse code
-        const timerSize = this.isMobile ? 18 : 24;
+        const morseSize = this.isMobile ? 14 : 20; // Smaller morse code
         
         // Title with top margin
         this.ctx.fillStyle = '#4CAF50';

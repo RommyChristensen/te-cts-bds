@@ -37,6 +37,7 @@ let completedPlayers = new Map(); // Track players who completed games (for rewa
 let recentActivity = []; // Track recent answer submissions as fallback
 let activeGame = null;
 let globalGameProgress = {}; // Track all teams' progress
+let gameStartTime = null; // Track when game actually started for persistent timer
 
 // Routes
 app.get('/', (req, res) => {
@@ -52,6 +53,11 @@ app.get('/user-dashboard', (req, res) => {
     return res.redirect('/');
   }
   res.sendFile(path.join(__dirname, 'public', 'user-dashboard.html'));
+});
+
+// API endpoint to get the original game start time
+app.get('/api/game-start-time', (req, res) => {
+  res.json({ gameStartTime: gameStartTime });
 });
 
 app.get('/admin-dashboard', (req, res) => {
@@ -548,7 +554,14 @@ io.on('connection', (socket) => {
 
   socket.on('start-game', (data) => {
     if (socket.userType === 'admin') {
-      io.emit('game-started', { game: activeGame });
+      // Set game start time for persistent timer
+      gameStartTime = Date.now();
+      console.log('⏱️ Game start time set:', gameStartTime);
+      
+      io.emit('game-started', { 
+        game: activeGame,
+        gameStartTime: gameStartTime // Send start time to all clients
+      });
       io.emit('game-activity', { type: 'game_started', game: activeGame });
       console.log('Game started by admin:', socket.username);
       
@@ -589,6 +602,14 @@ io.on('connection', (socket) => {
     
     console.log('📡 Broadcasting game progress to all clients with', Object.keys(globalGameProgress).length, 'teams');
     io.emit('game-progress', progressData);
+  });
+
+  socket.on('timer-update', (data) => {
+    // Broadcast timer updates to all clients (especially admin)
+    io.emit('timer-update', {
+      elapsed: data.elapsed,
+      timestamp: data.timestamp
+    });
   });
 
   socket.on('answer-submitted', (data) => {

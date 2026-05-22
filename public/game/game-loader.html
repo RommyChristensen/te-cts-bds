@@ -266,6 +266,7 @@
                 <div class="game-title" id="gameTitle">Game Name</div>
                 <div class="player-info" id="playerInfo">Player: Team</div>
             </div>
+            <div class="game-timer" id="gameTimer" style="font-size: 24px; font-weight: bold; color: #4CAF50; min-width: 80px; text-align: right;">00:00</div>
             <div class="game-controls">
                 <button class="btn btn-small btn-secondary" onclick="toggleFullscreen()">🖥️ Fullscreen</button>
                 <button class="btn btn-small btn-secondary" onclick="leaveGame()">🚪 Keluar</button>
@@ -276,7 +277,6 @@
             <canvas id="gameCanvas"></canvas>
         </div>
         
-        <div class="timer" id="gameTimer">00:00</div>
     </div>
 
     <!-- Notification -->
@@ -293,6 +293,7 @@
         let gameInstance = null;
         let gameTimer = null;
         let timeRemaining = 0;
+        let startTime = null; // Game start time - set once when admin starts game
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
@@ -362,6 +363,26 @@
 
                 updateLoadingText(`Memuat ${currentGame.name}...`);
 
+                // Fetch original game start time from server (for page refresh persistence)
+                try {
+                    const response = await fetch('/api/game-start-time');
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.gameStartTime) {
+                            startTime = data.gameStartTime;
+                            console.log('⏱️ Fetched original game start time from server:', startTime);
+                            
+                            // If game is already in progress, start the timer immediately
+                            if (startTime && startTime > 0) {
+                                console.log('⏱️ Game already in progress, starting timer...');
+                                // Timer will be started after game loads
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Could not fetch game start time from server:', error);
+                }
+
                 // Load game script
                 const scriptPath = `/games/${currentGame.file_name}`;
                 await loadScript(scriptPath);
@@ -372,7 +393,8 @@
                         canvas: document.getElementById('gameCanvas'),
                         socket: socket,
                         user: currentUser,
-                        game: currentGame
+                        game: currentGame,
+                        startTime: startTime
                     });
 
                     // Setup game event listeners
@@ -389,8 +411,17 @@
                         handleGameOver(result);
                     });
 
-                    // Start game
+                    // Initialize game - will be started when admin sends game-started event
                     gameInstance.init();
+                    
+                    // If startTime is already set (game in progress), start timer and game immediately
+                    if (startTime && startTime > 0) {
+                        console.log('⏱️ Starting timer and game - startTime already set:', startTime);
+                        startTimer();
+                        if (gameInstance && gameInstance.start) {
+                            gameInstance.start(startTime);
+                        }
+                    }
                 } else {
                     throw new Error('Game class not found');
                 }
@@ -424,9 +455,32 @@
             });
 
             socket.on('game-started', (data) => {
-                if (gameInstance && gameInstance.start) {
-                    gameInstance.start();
+                // Set startTime once when admin starts game - never changes after this
+                if (!startTime) {
+                    startTime = Date.now();
+                    console.log('⏱️ Game started - startTime set to:', startTime);
+                    
+                    // Start timer display immediately
                     startTimer();
+                    
+                    // Emit timer updates to server every 500ms so admin can track
+                    const timerInterval = setInterval(() => {
+                        if (startTime) {
+                            const elapsed = Date.now() - startTime;
+                            socket.emit('timer-update', {
+                                elapsed: elapsed,
+                                timestamp: Date.now()
+                            });
+                        }
+                    }, 500);
+                    
+                    // Store interval ID for cleanup
+                    window.timerInterval = timerInterval;
+                }
+                
+                if (gameInstance && gameInstance.start) {
+                    // Pass the startTime to the game instance
+                    gameInstance.start(startTime);
                 }
             });
 
@@ -447,6 +501,36 @@
                 console.log('Disconnected from server');
                 showNotification('Koneksi terputus', 'warning');
             });
+
+            // Listen for game-ended and rewards-distributed events
+            socket.on('game-ended', (data) => {
+                console.log('🏁 Game ended by admin');
+                gameEnded = true;
+                checkAndRedirect();
+            });
+
+            socket.on('rewards-distributed', (data) => {
+                console.log('🎁 Rewards distributed by admin:', data);
+                rewardsData = data;
+                checkAndRedirect();
+            });
+        }
+
+        // Game end tracking
+        let gameEnded = false;
+        let rewardsData = null;
+
+        function checkAndRedirect() {
+            if (gameEnded && rewardsData) {
+                console.log('✅ Both game ended and rewards distributed, redirecting to result page...');
+                
+                // Encode rewards data as URL parameter
+                const encodedData = btoa(JSON.stringify(rewardsData));
+                const resultUrl = `/game/result?results=${encodedData}`;
+                console.log('🔗 Redirecting to:', resultUrl);
+                
+                window.location.href = resultUrl;
+            }
         }
 
         // UI Functions
@@ -492,22 +576,16 @@
 
         // Timer functions
         function startTimer() {
-            if (currentGame && currentGame.duration) {
-                timeRemaining = currentGame.duration * 60; // Convert to seconds
-                updateTimerDisplay();
-                
-                gameTimer = setInterval(() => {
-                    timeRemaining--;
-                    updateTimerDisplay();
-                    
-                    if (timeRemaining <= 0) {
-                        stopTimer();
-                        if (gameInstance && gameInstance.onTimeUp) {
-                            gameInstance.onTimeUp();
-                        }
-                    }
-                }, 1000);
+            console.log('⏱️ startTimer() called, startTime:', startTime);
+            // Update timer every 100ms to show elapsed time from startTime
+            if (gameTimer) {
+                clearInterval(gameTimer);
             }
+            gameTimer = setInterval(() => {
+                updateTimerDisplay();
+            }, 100);
+            // Call once immediately to show timer right away
+            updateTimerDisplay();
         }
 
         function stopTimer() {
@@ -518,10 +596,22 @@
         }
 
         function updateTimerDisplay() {
-            const minutes = Math.floor(timeRemaining / 60);
-            const seconds = timeRemaining % 60;
-            const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            document.getElementById('gameTimer').textContent = display;
+            console.log("update timer display")
+            if (startTime) {
+                const elapsed = Date.now() - startTime;
+                const totalSeconds = Math.floor(elapsed / 1000);
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                const timerElement = document.getElementById('gameTimer');
+                if (timerElement) {
+                    timerElement.textContent = display;
+                } else {
+                    console.warn('⏱️ Timer element not found in DOM');
+                }
+            } else {
+                console.warn('⏱️ startTime not set yet');
+            }
         }
 
         // Control functions
@@ -557,35 +647,6 @@
             
             // Don't redirect automatically - wait for admin to end game and distribute rewards
             console.log('🎮 Game completed, waiting for admin actions...');
-        }
-
-        // Listen for admin actions
-        let gameEnded = false;
-        let rewardsData = null;
-
-        socket.on('game-ended', (data) => {
-            console.log('🏁 Game ended by admin');
-            gameEnded = true;
-            checkAndRedirect();
-        });
-
-        socket.on('rewards-distributed', (data) => {
-            console.log('🎁 Rewards distributed by admin:', data);
-            rewardsData = data;
-            checkAndRedirect();
-        });
-
-        function checkAndRedirect() {
-            if (gameEnded && rewardsData) {
-                console.log('✅ Both game ended and rewards distributed, redirecting to result page...');
-                
-                // Encode rewards data as URL parameter
-                const encodedData = btoa(JSON.stringify(rewardsData));
-                const resultUrl = `/game/result?results=${encodedData}`;
-                console.log('🔗 Redirecting to:', resultUrl);
-                
-                window.location.href = resultUrl;
-            }
         }
 
         // Handle page unload
