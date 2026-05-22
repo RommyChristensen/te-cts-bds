@@ -16,7 +16,8 @@
             background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 50%, #262626 100%);
             min-height: 100vh;
             color: #ffffff;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .loading-container {
@@ -113,15 +114,11 @@
         .game-container {
             display: none;
             width: 100%;
-            height: 100vh;
+            min-height: 100vh;
             position: relative;
         }
 
         .game-header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
             background: rgba(0, 0, 0, 0.8);
             padding: 1rem;
             display: flex;
@@ -159,15 +156,13 @@
         }
 
         .game-content {
-            position: absolute;
-            top: 60px;
-            left: 0;
-            right: 0;
-            bottom: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             background: rgba(0, 0, 0, 0.5);
+            padding: 2rem 1rem;
+            min-height: auto;
         }
 
         #gameCanvas {

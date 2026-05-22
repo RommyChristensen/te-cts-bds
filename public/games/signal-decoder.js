@@ -37,10 +37,12 @@ class GameInstance {
 
     setupCanvas() {
         // Responsive canvas sizing
+        console.log('📱 Mobile detection:', this.isMobile, 'Window width:', window.innerWidth);
+        
         if (this.isMobile) {
             // Mobile dimensions
             this.canvas.width = Math.min(window.innerWidth - 20, 400);
-            this.canvas.height = Math.min(window.innerHeight - 200, 600);
+            this.canvas.height = Math.min(window.innerHeight - 200, 400);
         } else {
             // Desktop dimensions
             this.canvas.width = 800;
@@ -54,7 +56,10 @@ class GameInstance {
         
         // Create number pad for mobile
         if (this.isMobile) {
+            console.log('📱 Creating number pad for mobile');
             this.createNumberPad();
+        } else {
+            console.log('🖥️ Desktop mode - no keypad');
         }
     }
 
@@ -72,24 +77,25 @@ class GameInstance {
     }
 
     createNumberPad() {
+        console.log('🎮 createNumberPad() called');
+        
         // Create number pad container with game theme
         const padContainer = document.createElement('div');
         padContainer.id = 'numberPad';
         padContainer.style.cssText = `
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(180deg, #000000 0%, #1a1a1a 50%, #2d2d2d 100%);
-            border-top: 3px solid #4CAF50;
+            background: black
             padding: 15px;
             box-shadow: 0 -4px 20px rgba(0,0,0,0.6);
-            z-index: 1000;
             display: flex;
             flex-direction: column;
             gap: 8px;
             pointer-events: auto;
+            margin-top: 10px;
+            width: 100%;
+            box-sizing: border-box;
         `;
+        
+        console.log('🎮 Pad container created:', padContainer);
 
         // Create number rows
         const rows = [
@@ -202,14 +208,21 @@ class GameInstance {
             padContainer.appendChild(rowDiv);
         });
 
-        // Add to body (fixed position overlay)
-        document.body.appendChild(padContainer);
-        
-        // Add padding to game container instead of body to allow scrolling
-        const gameContainer = document.getElementById('gameContainer');
-        if (gameContainer) {
-            gameContainer.style.paddingBottom = '280px';
+        // Append keypad to canvas parent (game-content) instead of body
+        console.log('📍 Before append - canvas parent:', this.canvas.parentElement);
+        const canvasParent = this.canvas.parentElement;
+        if (canvasParent) {
+            canvasParent.appendChild(padContainer);
+            console.log('✅ Keypad appended to canvas parent (game-content)');
+        } else {
+            // Fallback to body if canvas parent doesn't exist
+            document.body.appendChild(padContainer);
+            console.log('⚠️ Canvas parent not found, appended to body');
         }
+        
+        console.log('📍 Keypad element in DOM:', document.getElementById('numberPad') ? 'YES' : 'NO');
+        console.log('📍 Keypad display style:', padContainer.style.display);
+        console.log('📍 Keypad visibility:', window.getComputedStyle(padContainer).display);
     }
 
     handleNumberPadClick(buttonText) {
