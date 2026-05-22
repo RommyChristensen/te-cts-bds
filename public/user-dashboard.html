@@ -979,7 +979,12 @@
 
                 loading.style.display = 'none';
 
-                if (!data.game) {
+                console.log('📊 Active games response:', data);
+                
+                // Ensure games is an array
+                const games = Array.isArray(data.games) ? data.games : (data.games ? [data.games] : []);
+                
+                if (!games || games.length === 0) {
                     content.innerHTML = `
                         <div class="game-status">
                             <div class="game-status-icon no-game">🎮</div>
@@ -990,18 +995,37 @@
                         </div>
                     `;
                 } else {
-                    content.innerHTML = `
-                        <div class="game-status">
-                            <div class="game-status-icon">🎮</div>
-                            <div class="game-status-title">${data.game.name}</div>
-                            <div class="game-status-description">
-                                ${data.game.description}<br>
-                                Duration: ${data.game.duration} menit<br>
-                                Reward: ${data.game.reward_coins} coins
+                    // Filter games where user's team is registered
+                    const availableGames = games.filter(game => 
+                        game.teams && game.teams.some(team => team.team_name === currentUser.tim)
+                    );
+
+                    if (availableGames.length === 0) {
+                        content.innerHTML = `
+                            <div class="game-status">
+                                <div class="game-status-icon no-game">🎮</div>
+                                <div class="game-status-title">Tidak Ada Game untuk Tim Anda</div>
+                                <div class="game-status-description">
+                                    Tim Anda tidak terdaftar dalam game yang sedang aktif.
+                                </div>
                             </div>
-                            <button class="play-btn" onclick="joinGame()">Join Game</button>
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        // Display all available games
+                        const gamesHtml = availableGames.map(game => `
+                            <div class="game-status">
+                                <div class="game-status-icon">🎮</div>
+                                <div class="game-status-title">${game.name}</div>
+                                <div class="game-status-description">
+                                    ${game.description}<br>
+                                    Duration: ${game.duration} menit<br>
+                                    Reward: ${game.reward_coins} coins
+                                </div>
+                                <button class="play-btn" onclick="joinGame('${game.id}')">Join Game</button>
+                            </div>
+                        `).join('');
+                        content.innerHTML = gamesHtml;
+                    }
                 }
             } catch (error) {
                 loading.style.display = 'none';
@@ -1010,28 +1034,34 @@
             }
         }
 
-        async function joinGame() {
+        async function joinGame(gameId) {
             try {
-                // Get active game info
+                // Get active games info
                 const response = await fetch('/api/active-game');
                 const gameData = await response.json();
 
                 console.log("game data", gameData)
                 
-                if (gameData && gameData.game && gameData.game.game_url) {
-                    // Check if user's team is in the game teams
-                    if (gameData.game.teams && gameData.game.teams.some(team => team.team_name === currentUser.tim)) {
-                        // Notify server that user is joining
-                        socket.emit('join-game', { user: currentUser });
-                        
-                        // Open waiting room in new tab
-                        console.log('🚀 Opening waiting room in new tab...');
-                        window.open(gameData.game.game_url, '_blank');
-                        
-                        // Show notification to user
-                        alert('Waiting room dibuka di tab baru! Silakan cek tab baru Anda.');
+                // Ensure games is an array
+                const games = Array.isArray(gameData.games) ? gameData.games : (gameData.games ? [gameData.games] : []);
+                
+                if (games && games.length > 0) {
+                    const game = games.find(g => g.id === gameId);
+                    
+                    if (game && game.game_url) {
+                        // Check if user's team is in the game teams
+                        if (game.teams && game.teams.some(team => team.team_name === currentUser.tim)) {
+                            // Notify server that user is joining
+                            socket.emit('join-game', { user: currentUser, gameId: gameId });
+                            
+                            // Navigate to waiting room in same tab (iPhone compatible)
+                            console.log('🚀 Navigating to waiting room...');
+                            window.location.href = game.game_url + '?gameId=' + gameId;
+                        } else {
+                            alert('Tim Anda tidak terdaftar dalam game ini!');
+                        }
                     } else {
-                        alert('Tim Anda tidak terdaftar dalam game ini!');
+                        alert('Game tidak ditemukan!');
                     }
                 } else {
                     alert('Tidak ada game yang aktif saat ini!');

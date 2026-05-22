@@ -623,11 +623,22 @@
         let currentUser = null;
         let gameData = null;
         let isAdmin = false;
+        let gameId = null;
+
+        // Extract gameId from URL
+        function getGameIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('gameId');
+        }
 
         // Get current user and game info
         async function initializeGame() {
             try {
                 console.log('🚀 Initializing waiting room...');
+                
+                // Get gameId from URL
+                gameId = getGameIdFromUrl();
+                console.log('🎮 Game ID from URL:', gameId);
                 
                 // Get user info first
                 const userResponse = await fetch('/api/user-info');
@@ -655,10 +666,18 @@
                 if (gameResponse.ok) {
                     const result = await gameResponse.json();
                     console.log('📡 Active game response data:', result);
-                    gameData = result.game;
+                    
+                    // Find the specific game by gameId
+                    if (result.games && gameId) {
+                        gameData = result.games.find(g => g.id === gameId);
+                    } else if (result.games && result.games.length > 0) {
+                        gameData = result.games[0];
+                        gameId = gameData.id;
+                    }
                     
                     if (gameData) {
                         console.log('🎮 Game data loaded:', gameData);
+                        gameId = gameData.id;
                         updateGameInfo();
                         loadTeams();
                         showGameContent();
@@ -666,17 +685,17 @@
                         // Join game room after loading game data (both users and admins)
                         if (currentUser) {
                             if (!currentUser.isAdmin) {
-                                console.log('👤 User joining game...');
-                                socket.emit('join-game', { user: currentUser });
+                                console.log('👤 User joining game:', gameId);
+                                socket.emit('join-game', { user: currentUser, gameId: gameId });
                             } else {
-                                console.log('👨‍💼 Admin joining game room for monitoring...');
-                                socket.emit('join-game', { user: currentUser });
+                                console.log('👨‍💼 Admin joining game room for monitoring:', gameId);
+                                socket.emit('join-game', { user: currentUser, gameId: gameId });
                             }
                         }
                         
                         // Request current players list
-                        console.log('📋 Requesting players list...');
-                        socket.emit('get-players');
+                        console.log('📋 Requesting players list for game:', gameId);
+                        socket.emit('get-players', { gameId: gameId });
                     } else {
                         console.log('❌ No active game');
                         showError('Tidak ada game yang aktif saat ini!');
@@ -979,12 +998,12 @@
             console.log('🔐 Close room button clicked by admin');
             
             if (confirm('Apakah Anda yakin ingin menutup room? Ini akan menutup tab ini.')) {
-                console.log('👨‍💼 Admin closing room...');
+                console.log('👨‍💼 Admin closing room for game:', gameId);
                 
                 // Notify server that room is being closed
                 if (socket) {
-                    console.log('📡 Emitting close-room event...');
-                    socket.emit('close-room');
+                    console.log('📡 Emitting close-room event for game:', gameId);
+                    socket.emit('close-room', { gameId: gameId });
                 }
                 
                 // Close the tab after a short delay
@@ -1030,8 +1049,8 @@
         function startGameAsAdmin() {
             console.log('🎮 Start game button clicked by admin');
             if (confirm('Apakah Anda yakin ingin memulai game?')) {
-                console.log('📡 Emitting start-game event...');
-                socket.emit('start-game');
+                console.log('📡 Emitting start-game event for game:', gameId);
+                socket.emit('start-game', { gameId: gameId });
                 console.log('✅ Start-game event sent');
             } else {
                 console.log('❌ Start game cancelled by admin');
@@ -1041,8 +1060,8 @@
         function endGame() {
             console.log('🏁 End game button clicked by admin');
             if (confirm('Apakah Anda yakin ingin mengakhiri game?')) {
-                console.log('📡 Emitting end-game event...');
-                socket.emit('end-game');
+                console.log('📡 Emitting end-game event for game:', gameId);
+                socket.emit('end-game', { gameId: gameId });
                 console.log('✅ End-game event sent');
                 
                 // Show ranking panel for admin
@@ -1059,8 +1078,13 @@
         function exitWaitingRoom() {
             console.log('🚪 Exit waiting room button clicked');
             if (confirm('Apakah Anda yakin ingin keluar dari waiting room?')) {
-                console.log('🚪 Closing waiting room tab...');
-                window.close();
+                console.log('🚪 Redirecting to dashboard...');
+                // Notify server that user is leaving
+                if (socket) {
+                    socket.emit('leave-game', { gameId: gameId });
+                }
+                // Redirect to user dashboard
+                window.location.href = '/user-dashboard.html';
             } else {
                 console.log('❌ Exit cancelled');
             }
@@ -1098,7 +1122,7 @@
             rankingTeams.innerHTML = '';
             
             // Get current players
-            socket.emit('get-players');
+            socket.emit('get-players', { gameId: gameId });
             
             // Wait for players data, then create ranking cards
             setTimeout(() => {
@@ -1348,8 +1372,8 @@
             
             if (confirm(`Konfirmasi distribusi reward:\n\n${rankingSummary}\n\nTotal: ${totalDistributed} coins`)) {
                 // Send to server
-                console.log('📡 Sending rewards to server...');
-                socket.emit('distribute-rewards', { rewards, totalDistributed });
+                console.log('📡 Sending rewards to server for game:', gameId);
+                socket.emit('distribute-rewards', { rewards, totalDistributed, gameId: gameId });
                 console.log('✅ Rewards distributed with ranking:', rewards);
                 
                 // Disable button to prevent double-click
@@ -1661,7 +1685,7 @@
                 showNotification(`${data.user.nama} telah bergabung!`);
                 console.log(`📢 Notification shown: ${data.user.nama} joined`);
             }
-            socket.emit('get-players');
+            socket.emit('get-players', { gameId: gameId });
         });
 
         socket.on('players-updated', (data) => {
@@ -1680,7 +1704,7 @@
                 showNotification(`${data.user.nama} telah keluar game`);
                 console.log(`📢 Notification shown: ${data.user.nama} left`);
             }
-            socket.emit('get-players');
+            socket.emit('get-players', { gameId: gameId });
         });
 
         socket.on('admin-joined', (data) => {
@@ -1895,42 +1919,41 @@
             try {
                 console.log('🔄 Redirecting to result page with data...');
                 console.log('📊 Results data to encode:', resultsData);
+                console.log('🎮 Current gameId:', gameId);
                 
-                // Validate results data
-                if (!resultsData || !resultsData.players) {
-                    console.error('❌ Invalid results data:', resultsData);
-                    window.location.href = '/game/result';
-                    return;
+                let resultUrl = '/game/result';
+                
+                // Try to encode results data if available
+                if (resultsData && resultsData.players && resultsData.players.length > 0) {
+                    try {
+                        const resultsString = JSON.stringify(resultsData);
+                        console.log('📝 Results string length:', resultsString.length);
+                        
+                        const encodedResults = btoa(resultsString);
+                        resultUrl = `/game/result?results=${encodedResults}`;
+                        console.log('✅ Results data encoded successfully');
+                    } catch (encodeError) {
+                        console.warn('⚠️ Failed to encode results data:', encodeError);
+                        // Continue with basic URL
+                    }
+                } else {
+                    console.log('⚠️ No valid results data, using basic URL');
                 }
                 
-                // Encode results data for URL
-                const resultsString = JSON.stringify(resultsData);
-                console.log('📝 Results string length:', resultsString.length);
+                // Always add gameId to URL
+                if (gameId) {
+                    resultUrl += (resultUrl.includes('?') ? '&' : '?') + 'gameId=' + gameId;
+                }
                 
-                const encodedResults = btoa(resultsString);
-                const resultUrl = `/game/result?results=${encodedResults}`;
-                
-                console.log('📡 Redirecting to:', resultUrl);
+                console.log('📡 Final redirect URL:', resultUrl);
                 console.log('🔗 Full URL:', window.location.origin + resultUrl);
                 
                 // Show notification before redirect
-                showNotification('🔄 Opening results page in new tab...');
+                showNotification('🔄 Membuka halaman hasil...');
                 
-                // Check if we have valid session by testing a simple request
-                console.log('🔍 Checking session validity...');
-                
-                // Redirect after a short delay to allow notification to show
-                setTimeout(() => {
-                    console.log('🚀 Executing redirect to new tab...');
-                    console.log('🍪 Current cookies:', document.cookie);
-                    
-                    // Open result page in new tab
-                    window.open(resultUrl, '_blank');
-                    
-                    // Optional: Keep current page or redirect to dashboard
-                    // For now, keep current page open
-                    console.log('✅ Result page opened in new tab');
-                }, 1000);
+                // Redirect immediately (no delay to ensure it executes)
+                console.log('🚀 Executing redirect in same tab...');
+                window.location.href = resultUrl;
                 
             } catch (error) {
                 console.error('❌ Error redirecting to results:', error);
@@ -1938,10 +1961,11 @@
                 console.error('❌ Stack trace:', error.stack);
                 
                 // Fallback: redirect without data
-                showNotification('⚠️ Opening results page in new tab...');
-                setTimeout(() => {
-                    window.open('/game/result', '_blank');
-                }, 1000);
+                console.log('🔄 Using fallback redirect...');
+                showNotification('⚠️ Membuka halaman hasil...');
+                const fallbackUrl = '/game/result' + (gameId ? '?gameId=' + gameId : '');
+                console.log('📡 Fallback URL:', fallbackUrl);
+                window.location.href = fallbackUrl;
             }
         }
 

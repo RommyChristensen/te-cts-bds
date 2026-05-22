@@ -1001,8 +1001,8 @@
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon">🎯</div>
-                            <div class="stat-value">${stats.activeGame ? stats.activeGame.name : 'None'}</div>
-                            <div class="stat-label">Active Game</div>
+                            <div class="stat-value">${stats.activeGames ? stats.activeGames.length : 0}</div>
+                            <div class="stat-label">Active Games</div>
                         </div>
                     </div>
                 `;
@@ -1065,9 +1065,8 @@
                                         <div class="action-buttons">
                                             <button class="btn btn-sm btn-warning" onclick="editGame('${game.id}')">Edit</button>
                                             <button class="btn btn-sm btn-danger" onclick="deleteGame('${game.id}')">Delete</button>
-                                            ${game.status !== 'active' ? `<button class="btn btn-sm btn-success" onclick="setActiveGame('${game.id}')">Set Active</button>` : ''}
-                                            ${game.status === 'active' ? `<button class="btn btn-sm btn-primary" onclick="viewGameRoom('/game/${game.id}')">View Room</button>` : ''}
-                                            ${game.status === 'active' ? `<button class="btn btn-sm btn-secondary" onclick="setInactiveGame('${game.id}')">Set Inactive</button>` : ''}
+                                            ${game.status !== 'active' ? `<button class="btn btn-sm btn-success" onclick="setActiveGame('${game.id}')">Activate</button>` : `<button class="btn btn-sm btn-secondary" onclick="setInactiveGame('${game.id}')">Deactivate</button>`}
+                                            ${game.status === 'active' ? `<button class="btn btn-sm btn-primary" onclick="viewGameRoom('${game.id}')">View Room</button>` : ''}
                                         </div>
                                     </td>
                                 </tr>
@@ -1407,9 +1406,11 @@
             }
         }
 
-        function viewGameRoom(gameUrl) {
-            // Open game room in new tab
-            window.open(gameUrl, '_blank');
+        function viewGameRoom(gameId) {
+            // Open waiting room for the specific game in new tab
+            const waitingRoomUrl = `/game/waiting-room.html?gameId=${gameId}`;
+            console.log('🎮 Opening waiting room for game:', gameId);
+            window.open(waitingRoomUrl, '_blank');
         }
 
         async function setActiveGame(gameId) {

@@ -289,10 +289,21 @@
         let gameTimer = null;
         let timeRemaining = 0;
         let startTime = null; // Game start time - set once when admin starts game
+        let gameId = null;
+
+        // Extract gameId from URL
+        function getGameIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('gameId');
+        }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
             try {
+                // Get gameId from URL
+                gameId = getGameIdFromUrl();
+                console.log('🎮 Game ID from URL:', gameId);
+
                 // Get user info
                 currentUser = await getUserInfo();
                 if (!currentUser) {
@@ -340,7 +351,18 @@
                 const response = await fetch('/api/active-game');
                 if (response.ok) {
                     const data = await response.json();
-                    return data.game;
+                    // Find the specific game by gameId
+                    if (data.games && gameId) {
+                        const game = data.games.find(g => g.id === gameId);
+                        if (game) {
+                            gameId = game.id;
+                            return game;
+                        }
+                    } else if (data.games && data.games.length > 0) {
+                        const game = data.games[0];
+                        gameId = game.id;
+                        return game;
+                    }
                 }
                 return null;
             } catch (error) {
@@ -358,25 +380,9 @@
 
                 updateLoadingText(`Memuat ${currentGame.name}...`);
 
-                // Fetch original game start time from server (for page refresh persistence)
-                try {
-                    const response = await fetch('/api/game-start-time');
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.gameStartTime) {
-                            startTime = data.gameStartTime;
-                            console.log('⏱️ Fetched original game start time from server:', startTime);
-                            
-                            // If game is already in progress, start the timer immediately
-                            if (startTime && startTime > 0) {
-                                console.log('⏱️ Game already in progress, starting timer...');
-                                // Timer will be started after game loads
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.warn('Could not fetch game start time from server:', error);
-                }
+                // Note: startTime will be set when the 'game-started' socket event is received
+                // or if the game is already in progress, it will be set from the socket event
+                console.log('⏱️ Waiting for game-started event to set startTime...');
 
                 // Load game script
                 const scriptPath = `/games/${currentGame.file_name}`;
@@ -389,6 +395,7 @@
                         socket: socket,
                         user: currentUser,
                         game: currentGame,
+                        gameId: gameId,
                         startTime: startTime
                     });
 
@@ -447,6 +454,27 @@
                     userType: currentUser.isAdmin ? 'admin' : 'user',
                     username: currentUser.username
                 });
+                
+                // Request game start time if game is already in progress
+                if (gameId) {
+                    console.log('📡 Requesting game start time for game:', gameId);
+                    socket.emit('request-game-start-time', { gameId: gameId });
+                }
+            });
+
+            socket.on('game-start-time', (data) => {
+                // Receive the original game start time for in-progress games
+                if (data && data.startTime && !startTime) {
+                    startTime = data.startTime;
+                    console.log('⏱️ Received game start time from server:', startTime);
+                    
+                    // If game is already in progress, start the timer immediately
+                    if (gameInstance && gameInstance.start) {
+                        console.log('⏱️ Game already in progress, starting timer...');
+                        startTimer();
+                        gameInstance.start(startTime);
+                    }
+                }
             });
 
             socket.on('game-started', (data) => {
@@ -518,13 +546,33 @@
         function checkAndRedirect() {
             if (gameEnded && rewardsData) {
                 console.log('✅ Both game ended and rewards distributed, redirecting to result page...');
+                console.log('🎮 Current gameId:', gameId);
+                console.log('🎁 Rewards data:', rewardsData);
                 
-                // Encode rewards data as URL parameter
-                const encodedData = btoa(JSON.stringify(rewardsData));
-                const resultUrl = `/game/result?results=${encodedData}`;
-                console.log('🔗 Redirecting to:', resultUrl);
-                
-                window.location.href = resultUrl;
+                try {
+                    // Encode rewards data as URL parameter
+                    const encodedData = btoa(JSON.stringify(rewardsData));
+                    let resultUrl = `/game/result?results=${encodedData}`;
+                    
+                    // Add gameId to URL
+                    if (gameId) {
+                        resultUrl += `&gameId=${gameId}`;
+                    }
+                    
+                    console.log('🔗 Redirecting to:', resultUrl);
+                    
+                    // Redirect immediately
+                    window.location.href = resultUrl;
+                } catch (error) {
+                    console.error('❌ Error during redirect:', error);
+                    // Fallback redirect
+                    let fallbackUrl = '/game/result';
+                    if (gameId) {
+                        fallbackUrl += `?gameId=${gameId}`;
+                    }
+                    console.log('🔄 Using fallback URL:', fallbackUrl);
+                    window.location.href = fallbackUrl;
+                }
             }
         }
 
@@ -572,13 +620,20 @@
         // Timer functions
         function startTimer() {
             console.log('⏱️ startTimer() called, startTime:', startTime);
-            // Update timer every 100ms to show elapsed time from startTime
+            
+            // Clear any existing timer
             if (gameTimer) {
                 clearInterval(gameTimer);
+                console.log('⏱️ Cleared existing timer');
             }
+            
+            // Update timer every 100ms to show elapsed time from startTime
             gameTimer = setInterval(() => {
                 updateTimerDisplay();
             }, 100);
+            
+            console.log('⏱️ Timer interval started, ID:', gameTimer);
+            
             // Call once immediately to show timer right away
             updateTimerDisplay();
         }
@@ -591,22 +646,25 @@
         }
 
         function updateTimerDisplay() {
-            console.log("update timer display")
-            if (startTime) {
-                const elapsed = Date.now() - startTime;
-                const totalSeconds = Math.floor(elapsed / 1000);
-                const minutes = Math.floor(totalSeconds / 60);
-                const seconds = totalSeconds % 60;
-                const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                const timerElement = document.getElementById('gameTimer');
-                if (timerElement) {
-                    timerElement.textContent = display;
-                } else {
-                    console.warn('⏱️ Timer element not found in DOM');
-                }
-            } else {
-                console.warn('⏱️ startTime not set yet');
+            const timerElement = document.getElementById('gameTimer');
+            
+            if (!timerElement) {
+                console.warn('⏱️ Timer element not found in DOM');
+                return;
             }
+            
+            if (!startTime) {
+                console.log('⏱️ startTime not set yet, showing 00:00');
+                timerElement.textContent = '00:00';
+                return;
+            }
+            
+            const elapsed = Date.now() - startTime;
+            const totalSeconds = Math.floor(elapsed / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            timerElement.textContent = display;
         }
 
         // Control functions

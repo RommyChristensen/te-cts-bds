@@ -6,6 +6,7 @@ class GameInstance {
         this.socket = options.socket;
         this.user = options.user;
         this.game = options.game;
+        this.gameId = options.gameId;
         this.startTime = options.startTime || null;
         console.log("startTime: " + (Date.now() - this.startTime));
         
@@ -353,10 +354,17 @@ class GameInstance {
         this.gameEnded = false;
         this.rewardsData = null;
 
+        // Join game room to receive game-ended and rewards-distributed events
+        if (this.gameId) {
+            console.log('🎮 Joining game room:', 'game-' + this.gameId);
+            this.socket.emit('join-game', { gameId: this.gameId, user: this.user });
+        }
+
         // Listen for game ended event (admin ends the game)
         this.socket.on('game-ended', (data) => {
-            console.log('🏁 Game ended by admin');
+            console.log('🏁 Game ended by admin, data:', data);
             this.gameEnded = true;
+            console.log('✅ gameEnded set to true');
             this.checkAndRedirect();
         });
 
@@ -369,15 +377,38 @@ class GameInstance {
 
         // Check if both actions completed, then redirect
         this.checkAndRedirect = () => {
+            console.log('🔄 checkAndRedirect called - gameEnded:', this.gameEnded, 'rewardsData:', this.rewardsData);
             if (this.gameEnded && this.rewardsData) {
                 console.log('✅ Both game ended and rewards distributed, redirecting to result page...');
+                console.log('🎮 GameId:', this.gameId);
+                console.log('🎁 Rewards data:', this.rewardsData);
                 
-                // Encode rewards data as URL parameter
-                const encodedData = btoa(JSON.stringify(this.rewardsData));
-                const resultUrl = `/game/result?results=${encodedData}`;
-                console.log('🔗 Redirecting to:', resultUrl);
-                
-                window.location.href = resultUrl;
+                try {
+                    // Encode rewards data as URL parameter
+                    const encodedData = btoa(JSON.stringify(this.rewardsData));
+                    let resultUrl = `/game/result?results=${encodedData}`;
+                    
+                    // Add gameId to URL
+                    if (this.gameId) {
+                        resultUrl += `&gameId=${this.gameId}`;
+                    }
+                    
+                    console.log('🔗 Redirecting to:', resultUrl);
+                    
+                    // Redirect immediately
+                    window.location.href = resultUrl;
+                } catch (error) {
+                    console.error('❌ Error during redirect:', error);
+                    // Fallback redirect
+                    let fallbackUrl = '/game/result';
+                    if (this.gameId) {
+                        fallbackUrl += `?gameId=${this.gameId}`;
+                    }
+                    console.log('🔄 Using fallback URL:', fallbackUrl);
+                    window.location.href = fallbackUrl;
+                }
+            } else {
+                console.log('⏳ Waiting for both conditions: gameEnded=' + this.gameEnded + ', rewardsData=' + (this.rewardsData ? 'set' : 'null'));
             }
         };
     }
@@ -394,6 +425,7 @@ class GameInstance {
         console.log("elapsedTime: " + elapsedTime)
         // Notify server about game progress
         this.socket.emit('game-progress', {
+            gameId: this.gameId,
             gameStatus: 'playing',
             teamProgress: {
                 [`Team ${this.teamNumber}`]: {
@@ -410,6 +442,7 @@ class GameInstance {
             if (this.isRunning && !this.isFinished) {
                 const elapsedTime = Date.now() - this.startTime;
                 this.socket.emit('game-progress', {
+                    gameId: this.gameId,
                     gameStatus: 'playing',
                     teamProgress: {
                         [`Team ${this.teamNumber}`]: {
@@ -425,6 +458,7 @@ class GameInstance {
         
         // Notify server
         this.socket.emit('game-activity', {
+            gameId: this.gameId,
             type: 'game_started_player',
             user: this.user,
             game: this.game,
@@ -472,6 +506,7 @@ class GameInstance {
         
         // Notify server about game progress
         this.socket.emit('game-progress', {
+            gameId: this.gameId,
             gameStatus: isCorrect ? 'finished' : 'playing',
             teamProgress: {
                 [`Team ${this.teamNumber}`]: {
@@ -487,6 +522,7 @@ class GameInstance {
         
         // Notify server about answer submission
         this.socket.emit('game-activity', {
+            gameId: this.gameId,
             type: 'answer_submitted',
             user: this.user,
             team: this.teamNumber,
@@ -497,6 +533,7 @@ class GameInstance {
 
         // Emit specific answer submitted event for immediate feedback
         this.socket.emit('answer-submitted', {
+            gameId: this.gameId,
             user: this.user,
             team: this.teamNumber,
             teamName: `Team ${this.teamNumber}`,
@@ -519,6 +556,7 @@ class GameInstance {
                 
                 // Update progress to show retry
                 this.socket.emit('game-progress', {
+                    gameId: this.gameId,
                     gameStatus: 'playing',
                     teamProgress: {
                         [`Team ${this.teamNumber}`]: {

@@ -403,6 +403,10 @@
                 console.log('🍪 Current cookies:', document.cookie);
                 console.log('🔗 Current URL:', window.location.href);
                 
+                // Get gameId from URL
+                const gameId = getUrlParameter('gameId');
+                console.log('🎮 Game ID from URL:', gameId);
+                
                 // Get current user info
                 try {
                     const userResponse = await fetch('/api/user-info');
@@ -427,7 +431,12 @@
                     
                     if (gameResponse.ok) {
                         const result = await gameResponse.json();
-                        gameData = result.game;
+                        // Find the specific game by gameId
+                        if (result.games && gameId) {
+                            gameData = result.games.find(g => g.id === gameId);
+                        } else if (result.games && result.games.length > 0) {
+                            gameData = result.games[0];
+                        }
                         console.log('✅ Game data loaded:', gameData);
                     } else {
                         console.log('⚠️ Game info response not ok:', gameResponse.status);

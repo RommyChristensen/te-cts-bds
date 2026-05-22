@@ -156,10 +156,8 @@ class GameModel {
     return result.rows[0];
   }
 
-  // Set game as active (deactivate all others)
+  // Set game as active (without deactivating others)
   static async setActive(id) {
-    await db.query('UPDATE games SET status = $1', ['inactive']);
-    
     const result = await db.query(
       'UPDATE games SET status = $1 WHERE id = $2 RETURNING *',
       ['active', id]
@@ -176,7 +174,7 @@ class GameModel {
     return result.rows[0];
   }
 
-  // Get active game
+  // Get active games
   static async getActive() {
     const result = await db.query(`
       SELECT 
@@ -195,8 +193,9 @@ class GameModel {
       LEFT JOIN game_teams gt ON g.id = gt.game_id
       WHERE g.status = $1
       GROUP BY g.id
+      ORDER BY g.created_at
     `, ['active']);
-    return result.rows[0];
+    return result.rows;
   }
 
   // Update all games

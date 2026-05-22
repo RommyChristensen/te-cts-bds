@@ -32,12 +32,12 @@ app.use(session({
 }));
 
 // Game state
-let gamePlayers = new Map(); // Track players in current game
+let gamePlayers = new Map(); // Track players per game: { gameId: Map of players }
 let completedPlayers = new Map(); // Track players who completed games (for rewards)
 let recentActivity = []; // Track recent answer submissions as fallback
-let activeGame = null;
-let globalGameProgress = {}; // Track all teams' progress
-let gameStartTime = null; // Track when game actually started for persistent timer
+let activeGames = new Map(); // Track all active games: { gameId: gameObject }
+let globalGameProgress = new Map(); // Track progress per game: { gameId: teamProgress }
+let gameStartTime = new Map(); // Track start time per game: { gameId: timestamp }
 
 // Routes
 app.get('/', (req, res) => {
@@ -194,9 +194,9 @@ app.get('/api/user-info', async (req, res) => {
 
 app.get('/api/active-game', async (req, res) => {
   try {
-    // Always fetch from database to get latest state
-    const activeGame = await GameModel.getActive();
-    res.json({ game: activeGame });
+    // Fetch all active games from database
+    const games = await GameModel.getActive();
+    res.json({ games: games });
   } catch (error) {
     console.error('Active game error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -228,7 +228,7 @@ app.get('/api/dashboard-stats', async (req, res) => {
     
     res.json({
       onlinePlayers,
-      activeGame,
+      activeGames: Array.from(activeGames.values()),
       totalUsers: totalUsers.length,
       totalGames: totalGames.length
     });
@@ -295,17 +295,20 @@ app.post('/api/set-active-game/:id', async (req, res) => {
   try {
     const gameId = req.params.id;
     
-    // Set all games to inactive first
-    await GameModel.updateAll({ status: 'inactive' });
-    
     // Set the selected game as active
-    activeGame = await GameModel.setActive(gameId);
+    const game = await GameModel.setActive(gameId);
     
-    // Emit real-time update
-    io.emit('game-status-changed', { game: activeGame });
-    io.emit('game-activity', { type: 'game_activated', game: activeGame });
-    
-    res.json({ success: true, activeGame });
+    if (game) {
+      activeGames.set(gameId, game);
+      
+      // Emit real-time update
+      io.emit('game-status-changed', { games: Array.from(activeGames.values()) });
+      io.emit('game-activity', { type: 'game_activated', game: game });
+      
+      res.json({ success: true, game });
+    } else {
+      res.status(404).json({ success: false, message: 'Game not found' });
+    }
   } catch (error) {
     console.error('Set active game error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -319,20 +322,20 @@ app.post('/api/set-inactive-game/:id', async (req, res) => {
     // Set the selected game as inactive
     await GameModel.setInactive(gameId);
     
-    // Clear active game if this was the active one
-    if (activeGame && activeGame.id === gameId) {
-      activeGame = null;
-    }
+    // Remove from active games
+    activeGames.delete(gameId);
     
-    // Clear game players
-    gamePlayers.clear();
+    // Clear players for this specific game
+    gamePlayers.delete(gameId);
+    globalGameProgress.delete(gameId);
+    gameStartTime.delete(gameId);
     
     // Emit real-time update
-    io.emit('game-status-changed', { game: activeGame });
+    io.emit('game-status-changed', { games: Array.from(activeGames.values()) });
     io.emit('game-activity', { type: 'game_deactivated', game: null });
-    io.emit('game-ended', { game: null }); // Notify all players that game ended
+    io.to('game-' + gameId).emit('game-ended', { gameId: gameId });
     
-    res.json({ success: true, activeGame });
+    res.json({ success: true, games: Array.from(activeGames.values()) });
   } catch (error) {
     console.error('Set inactive game error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -483,125 +486,159 @@ io.on('connection', (socket) => {
       // Notify admin dashboard about user status change
       io.emit('user-status-changed', { userType: user.userType, username: user.username, status: 'offline' });
       
-      // Remove from game if player was in game
-      if (gamePlayers.has(user.username)) {
-        const playerData = gamePlayers.get(user.username);
-        gamePlayers.delete(user.username);
-        
-        console.log('Player removed from game on disconnect:', user.username);
-        console.log('Current game players:', Array.from(gamePlayers.keys()));
-        
-        // Notify game room about player leaving
-        io.to('game-room').emit('player-left', { user: playerData });
-        io.emit('game-activity', { type: 'player_left', data: { user: playerData } });
-        
-        // Send updated player list to game room
-        io.to('game-room').emit('players-updated', {
-          players: Array.from(gamePlayers.values())
-        });
-      }
+      // Remove from all games if player was in any game
+      gamePlayers.forEach((gamePlayersList, gameId) => {
+        if (gamePlayersList.has(user.username)) {
+          const playerData = gamePlayersList.get(user.username);
+          gamePlayersList.delete(user.username);
+          
+          const roomName = 'game-' + gameId;
+          console.log('Player removed from game on disconnect:', user.username, 'from game:', gameId);
+          console.log('Current game players for', gameId, ':', Array.from(gamePlayersList.keys()));
+          
+          // Notify game room about player leaving
+          io.to(roomName).emit('player-left', { user: playerData, gameId: gameId });
+          io.emit('game-activity', { type: 'player_left', data: { user: playerData }, gameId: gameId });
+          
+          // Send updated player list to game room
+          io.to(roomName).emit('players-updated', {
+            players: Array.from(gamePlayersList.values())
+          });
+        }
+      });
     }
   });
   
-  socket.on('join-game', (data) => {
-    socket.join('game-room');
+  socket.on('request-game-start-time', (data) => {
+    const gameId = data.gameId;
+    const startTime = gameStartTime.has(gameId) ? gameStartTime.get(gameId) : null;
     
-    console.log(`User joining game room: ${data.user?.username} (${socket.userType})`);
+    console.log(`📡 Game start time requested for game ${gameId}, startTime: ${startTime}`);
+    
+    socket.emit('game-start-time', {
+      gameId: gameId,
+      startTime: startTime
+    });
+  });
+
+  socket.on('join-game', (data) => {
+    const gameId = data.gameId;
+    const roomName = 'game-' + gameId;
+    socket.join(roomName);
+    
+    console.log(`User joining game room: ${data.user?.username} (${socket.userType}) for game ${gameId}`);
+    
+    // Initialize game players map if not exists
+    if (!gamePlayers.has(gameId)) {
+      gamePlayers.set(gameId, new Map());
+    }
     
     // Add player to game tracking (but not admins)
-    if (data.user && !gamePlayers.has(data.user.username) && socket.userType !== 'admin') {
-      gamePlayers.set(data.user.username, {
+    if (data.user && !gamePlayers.get(gameId).has(data.user.username) && socket.userType !== 'admin') {
+      gamePlayers.get(gameId).set(data.user.username, {
         ...data.user,
         joinedAt: new Date(),
         socketId: socket.id
       });
       
       console.log('Player joined game:', data.user.username);
-      console.log('Current game players:', Array.from(gamePlayers.keys()));
+      console.log('Current game players for', gameId, ':', Array.from(gamePlayers.get(gameId).keys()));
       
       // Notify about player joining
-      socket.broadcast.to('game-room').emit('player-joined', data);
-      io.emit('game-activity', { type: 'player_joined', data });
+      socket.broadcast.to(roomName).emit('player-joined', data);
+      io.emit('game-activity', { type: 'player_joined', data, gameId });
     } else if (socket.userType === 'admin') {
       console.log('Admin joined game room for monitoring:', data.user?.username);
-      // Don't add admin to gamePlayers, but still notify
-      socket.broadcast.to('game-room').emit('admin-joined', data);
+      socket.broadcast.to(roomName).emit('admin-joined', data);
     }
     
     // Send updated player list to game room
-    io.to('game-room').emit('players-updated', {
-      players: Array.from(gamePlayers.values())
+    io.to(roomName).emit('players-updated', {
+      players: Array.from(gamePlayers.get(gameId).values())
     });
   });
   
   socket.on('leave-game', (data) => {
-    socket.leave('game-room');
+    const gameId = data.gameId;
+    const roomName = 'game-' + gameId;
+    socket.leave(roomName);
     
     // Remove player from game tracking
-    if (data.user && gamePlayers.has(data.user.username)) {
-      gamePlayers.delete(data.user.username);
+    if (data.user && gamePlayers.has(gameId) && gamePlayers.get(gameId).has(data.user.username)) {
+      gamePlayers.get(gameId).delete(data.user.username);
       console.log('Player left game:', data.user.username);
       
       // Send updated player list to game room
-      io.to('game-room').emit('players-updated', {
-        players: Array.from(gamePlayers.values())
+      io.to(roomName).emit('players-updated', {
+        players: Array.from(gamePlayers.get(gameId).values())
       });
     }
     
-    socket.broadcast.to('game-room').emit('player-left', data);
-    io.emit('game-activity', { type: 'player_left', data });
+    socket.broadcast.to(roomName).emit('player-left', data);
+    io.emit('game-activity', { type: 'player_left', data, gameId });
   });
 
   socket.on('start-game', (data) => {
     if (socket.userType === 'admin') {
+      const gameId = data.gameId;
+      const roomName = 'game-' + gameId;
+      
       // Set game start time for persistent timer
-      gameStartTime = Date.now();
-      console.log('⏱️ Game start time set:', gameStartTime);
+      gameStartTime.set(gameId, Date.now());
+      console.log('⏱️ Game start time set for', gameId, ':', gameStartTime.get(gameId));
       
-      io.emit('game-started', { 
-        game: activeGame,
-        gameStartTime: gameStartTime // Send start time to all clients
+      io.to(roomName).emit('game-started', { 
+        gameId: gameId,
+        gameStartTime: gameStartTime.get(gameId)
       });
-      io.emit('game-activity', { type: 'game_started', game: activeGame });
-      console.log('Game started by admin:', socket.username);
+      io.emit('game-activity', { type: 'game_started', gameId: gameId });
+      console.log('Game started by admin:', socket.username, 'for game:', gameId);
       
-      // Reset global game progress and emit update to all
-      globalGameProgress = {};
-      io.emit('game-progress', { 
+      // Reset global game progress for this game and emit update
+      globalGameProgress.set(gameId, {});
+      io.to(roomName).emit('game-progress', { 
+        gameId: gameId,
         gameStatus: 'starting',
         teamProgress: {}
       });
       
       // Redirect only players (not admin) to game loader
-      socket.broadcast.emit('redirect-to-game', { url: '/game-loader' });
-      console.log('Redirecting players to game loader, admin stays for monitoring');
+      socket.broadcast.to(roomName).emit('redirect-to-game', { url: '/game-loader?gameId=' + gameId });
+      console.log('Redirecting players to game loader for game:', gameId);
     }
   });
 
   socket.on('game-progress', (data) => {
-    console.log('Game progress update:', data);
+    const gameId = data.gameId;
+    console.log('Game progress update for game', gameId, ':', data);
     
     // Update global game progress with new data
     if (data.teamProgress) {
+      if (!globalGameProgress.has(gameId)) {
+        globalGameProgress.set(gameId, {});
+      }
       // Merge new progress data with existing data (don't overwrite entire teams)
       Object.entries(data.teamProgress).forEach(([teamName, progress]) => {
-        if (!globalGameProgress[teamName]) {
-          globalGameProgress[teamName] = {};
+        const gameProgress = globalGameProgress.get(gameId);
+        if (!gameProgress[teamName]) {
+          gameProgress[teamName] = {};
         }
         // Update only the fields that changed, preserve existing data
-        Object.assign(globalGameProgress[teamName], progress);
+        Object.assign(gameProgress[teamName], progress);
       });
-      console.log('🎮 Updated global game progress:', JSON.stringify(globalGameProgress, null, 2));
+      console.log('🎮 Updated global game progress for', gameId, ':', JSON.stringify(globalGameProgress.get(gameId), null, 2));
     }
     
-    // Broadcast combined progress to all clients
+    // Broadcast combined progress to game room
     const progressData = {
+      gameId: gameId,
       gameStatus: data.gameStatus,
-      teamProgress: globalGameProgress
+      teamProgress: globalGameProgress.get(gameId) || {}
     };
     
-    console.log('📡 Broadcasting game progress to all clients with', Object.keys(globalGameProgress).length, 'teams');
-    io.emit('game-progress', progressData);
+    const roomName = 'game-' + gameId;
+    console.log('📡 Broadcasting game progress to game', gameId, 'with', Object.keys(progressData.teamProgress).length, 'teams');
+    io.to(roomName).emit('game-progress', progressData);
   });
 
   socket.on('timer-update', (data) => {
@@ -613,12 +650,14 @@ io.on('connection', (socket) => {
   });
 
   socket.on('answer-submitted', (data) => {
-    console.log('🎯 Answer submitted:', data);
+    const gameId = data.gameId;
+    console.log('🎯 Answer submitted for game', gameId, ':', data);
     
     // Add to recent activity as fallback (works even without restart)
     if (data.correct) {
       recentActivity.push({
         ...data.user,
+        gameId: gameId,
         team: data.teamName || data.user.tim,
         completedAt: Date.now(),
         answer: data.answer,
@@ -632,6 +671,7 @@ io.on('connection', (socket) => {
     if (data.correct && !completedPlayers.has(data.user.username)) {
       completedPlayers.set(data.user.username, {
         ...data.user,
+        gameId: gameId,
         team: data.teamName || data.user.tim,
         completedAt: Date.now(),
         answer: data.answer,
@@ -641,28 +681,33 @@ io.on('connection', (socket) => {
       console.log(`📊 Total completed players: ${completedPlayers.size}`);
     }
     
-    // Broadcast to all clients for immediate admin notification
+    // Broadcast to game room and all clients for immediate admin notification
+    const roomName = 'game-' + gameId;
+    io.to(roomName).emit('answer-submitted', data);
     io.emit('answer-submitted', data);
   });
 
   socket.on('end-game', (data) => {
     if (socket.userType === 'admin') {
-      console.log('Game ended by admin:', socket.username);
+      const gameId = data.gameId;
+      const roomName = 'game-' + gameId;
+      console.log('Game ended by admin:', socket.username, 'for game:', gameId);
       
       // Don't set game to inactive here - keep it active for result page
       // Only set inactive when admin closes the room
       
-      // Reset global game progress and emit events
-      globalGameProgress = {};
-      io.emit('game-progress', { 
+      // Reset global game progress for this game and emit events
+      globalGameProgress.set(gameId, {});
+      io.to(roomName).emit('game-progress', { 
+        gameId: gameId,
         gameStatus: 'finished',
         teamProgress: {}
       });
       
-      io.emit('game-ended', { game: activeGame });
-      io.emit('game-activity', { type: 'game_ended', game: activeGame });
+      io.to(roomName).emit('game-ended', { gameId: gameId });
+      io.emit('game-activity', { type: 'game_ended', gameId: gameId });
       
-      console.log('📡 Game-ended events sent to all clients');
+      console.log('📡 Game-ended events sent to game', gameId);
       console.log('🔄 Game remains active for result page access');
     }
   });
@@ -677,14 +722,19 @@ io.on('connection', (socket) => {
     if (socket.userType === 'admin') {
       try {
         console.log('🎁 Admin distributing rewards:', data);
-        console.log(`📊 Current game players: ${gamePlayers.size}`);
+        const gameId = data.gameId;
+        const roomName = 'game-' + gameId;
+        console.log(`📊 Current game players for ${gameId}: ${gamePlayers.has(gameId) ? gamePlayers.get(gameId).size : 0}`);
         
         const { rewards, totalDistributed } = data;
         const distributedPlayers = [];
         
+        // Get players for this specific game
+        let gamePlayersList = gamePlayers.has(gameId) ? gamePlayers.get(gameId) : new Map();
+        
         // Log all current players
         console.log('👥 Current players in game:');
-        gamePlayers.forEach((player, username) => {
+        gamePlayersList.forEach((player, username) => {
           console.log(`  - ${player.nama} (${username}) from ${player.tim}`);
         });
         
@@ -697,17 +747,25 @@ io.on('connection', (socket) => {
         });
         
         // Use fallback chain: gamePlayers -> completedPlayers -> recentActivity
-        let playersToReward = gamePlayers;
+        let playersToReward = gamePlayersList;
         let sourceName = 'gamePlayers';
         
         if (playersToReward.size === 0 && completedPlayers.size > 0) {
-            playersToReward = completedPlayers;
+            // Filter completed players for this game
+            playersToReward = new Map();
+            completedPlayers.forEach((player, username) => {
+              if (player.gameId === gameId) {
+                playersToReward.set(username, player);
+              }
+            });
             sourceName = 'completedPlayers';
-        } else if (playersToReward.size === 0 && recentActivity.length > 0) {
-            // Convert recentActivity array to Map for consistent processing
+        }
+        
+        if (playersToReward.size === 0 && recentActivity.length > 0) {
+            // Convert recentActivity array to Map for consistent processing, filtered by gameId
             playersToReward = new Map();
             recentActivity.forEach(player => {
-                if (!playersToReward.has(player.username)) {
+                if (player.gameId === gameId && !playersToReward.has(player.username)) {
                     playersToReward.set(player.username, player);
                 }
             });
@@ -736,9 +794,10 @@ io.on('connection', (socket) => {
               const oldBalance = currency.amount - perPlayerReward;
               
               // Create game result record
-              if (activeGame) {
+              const game = activeGames.get(gameId);
+              if (game) {
                 await GameResultModel.create({
-                  game_id: activeGame.id,
+                  game_id: gameId,
                   username: username,
                   team: playerTeam,
                   rank: teamRank,
@@ -818,35 +877,49 @@ io.on('connection', (socket) => {
   });
   
   socket.on('get-players', (data) => {
+    const gameId = data && data.gameId ? data.gameId : null;
+    
+    if (!gameId) {
+      console.warn('⚠️ get-players called without gameId');
+      socket.emit('players-updated', { players: [] });
+      return;
+    }
+    
     // Send current players list to requesting socket
+    const players = gamePlayers.has(gameId) ? Array.from(gamePlayers.get(gameId).values()) : [];
     socket.emit('players-updated', {
-      players: Array.from(gamePlayers.values())
+      players: players
     });
   });
 
   socket.on('close-room', async (data) => {
     if (socket.userType === 'admin') {
       try {
-        console.log('🔐 Room closed by admin:', socket.username);
+        const gameId = data.gameId;
+        const roomName = 'game-' + gameId;
+        console.log('🔐 Room closed by admin:', socket.username, 'for game:', gameId);
         
         // Set game to inactive in database
-        if (activeGame) {
-          await GameModel.setInactive(activeGame.id);
-          console.log(`🔐 Game ${activeGame.name} set to inactive on room close`);
+        if (activeGames.has(gameId)) {
+          const game = activeGames.get(gameId);
+          await GameModel.setInactive(gameId);
+          console.log(`🔐 Game ${game.name} set to inactive on room close`);
           
-          // Clear active game
-          activeGame = null;
-          console.log('🔐 Active game cleared on room close');
+          // Remove from active games
+          activeGames.delete(gameId);
+          console.log('🔐 Active game removed on room close');
         }
         
-        // Clear game players
-        gamePlayers.clear();
-        console.log('🧹 Game players cleared on room close');
+        // Clear game players for this specific game
+        gamePlayers.delete(gameId);
+        globalGameProgress.delete(gameId);
+        gameStartTime.delete(gameId);
+        console.log('🧹 Game players cleared on room close for game:', gameId);
         
         // Emit events
-        io.emit('room-closed', { game: null });
-        io.emit('game-activity', { type: 'room_closed', game: null });
-        io.emit('game-status-changed', { game: null });
+        io.to(roomName).emit('room-closed', { gameId: gameId });
+        io.emit('game-activity', { type: 'room_closed', gameId: gameId });
+        io.emit('game-status-changed', { games: Array.from(activeGames.values()) });
         
         console.log('📡 Room-closed events sent to all clients');
       } catch (error) {
