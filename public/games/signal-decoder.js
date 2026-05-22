@@ -88,6 +88,7 @@ class GameInstance {
             display: flex;
             flex-direction: column;
             gap: 8px;
+            pointer-events: auto;
         `;
 
         // Create number rows
@@ -201,11 +202,14 @@ class GameInstance {
             padContainer.appendChild(rowDiv);
         });
 
-        // Add to body (fixed position)
+        // Add to body (fixed position overlay)
         document.body.appendChild(padContainer);
         
-        // Add some padding to body to prevent content from being hidden behind keypad
-        document.body.style.paddingBottom = '280px';
+        // Add padding to game container instead of body to allow scrolling
+        const gameContainer = document.getElementById('gameContainer');
+        if (gameContainer) {
+            gameContainer.style.paddingBottom = '280px';
+        }
     }
 
     handleNumberPadClick(buttonText) {
