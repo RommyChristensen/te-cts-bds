@@ -681,10 +681,9 @@ io.on('connection', (socket) => {
       console.log(`📊 Total completed players: ${completedPlayers.size}`);
     }
     
-    // Broadcast to game room and all clients for immediate admin notification
+    // Broadcast to game room only (admin dan player di game tersebut)
     const roomName = 'game-' + gameId;
     io.to(roomName).emit('answer-submitted', data);
-    io.emit('answer-submitted', data);
   });
 
   socket.on('end-game', (data) => {
@@ -850,8 +849,8 @@ io.on('connection', (socket) => {
         
         console.log('📦 Rewards data to broadcast:', JSON.stringify(rewardsData, null, 2));
         
-        io.emit('rewards-distributed', rewardsData);
-        console.log('✅ rewards-distributed event sent to all clients');
+        io.to(roomName).emit('rewards-distributed', rewardsData);
+        console.log('✅ rewards-distributed event sent to game room:', roomName);
         
         io.emit('game-activity', { 
           type: 'rewards_distributed', 
