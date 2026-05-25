@@ -21,7 +21,7 @@ class GameInstance {
         this.endTime = null;
         
         // Grid properties
-        this.gridRows = 12;
+        this.gridRows = 6;
         this.gridCols = 40;
         this.cellSize = 0;
         this.gridStartX = 0;
@@ -48,36 +48,39 @@ class GameInstance {
     }
 
     setupCanvas() {
+        // Fixed cell size (2x previous) and reduced rows - canvas width derived from cellSize × cols
+        this.cellSize = this.isMobile ? 40 : 48;
+        const padding = this.isMobile ? 10 : 20;
+        const canvasWidth = this.cellSize * this.gridCols + padding * 2;
+        
         if (this.isMobile) {
-            // Wide canvas for larger grid cells (40 cols × 20px = 800px) - user scrolls horizontally
-            this.canvas.width = 840; // 40 cols * 20px + 40 padding
-            this.canvas.height = 1300;
+            this.canvas.width = canvasWidth; // ~1620px
+            this.canvas.height = 1100;
         } else {
-            this.canvas.width = 1000;
+            this.canvas.width = canvasWidth; // ~1960px
             this.canvas.height = 700;
         }
         
         this.canvas.style.border = '2px solid #2196F3';
         this.canvas.style.borderRadius = '8px';
         this.canvas.style.cursor = 'pointer';
+        this.canvas.style.maxWidth = 'none';
+        this.canvas.style.display = 'block';
         
         if (this.isMobile) {
-            // No maxWidth constraint - let canvas display at natural width
-            this.canvas.style.maxWidth = 'none';
             this.canvas.style.height = 'auto';
-            this.canvas.style.display = 'block';
-            // Enable horizontal scroll on parent
-            const parent = this.canvas.parentElement;
-            if (parent) {
-                parent.style.overflowX = 'auto';
-                parent.style.alignItems = 'flex-start';
-                parent.style.justifyContent = 'flex-start';
-                parent.style.width = '100%';
-                parent.style.padding = '10px';
-            }
         } else {
-            this.canvas.style.maxWidth = '100%';
             this.canvas.style.maxHeight = '100%';
+        }
+        
+        // Enable horizontal scroll on parent (both mobile & desktop, since canvas is wide)
+        const parent = this.canvas.parentElement;
+        if (parent) {
+            parent.style.overflowX = 'auto';
+            parent.style.alignItems = 'flex-start';
+            parent.style.justifyContent = 'flex-start';
+            parent.style.width = '100%';
+            parent.style.padding = '10px';
         }
         
         this.calculateGridDimensions();
@@ -87,19 +90,16 @@ class GameInstance {
         const padding = this.isMobile ? 10 : 20;
         const titleHeight = this.isMobile ? 30 : 35;
         const spacing = 10;
-        const availableWidth = this.canvas.width - padding * 2;
         
-        this.cellSize = Math.floor(availableWidth / this.gridCols);
+        // cellSize already set in setupCanvas
         this.gridWidth = this.cellSize * this.gridCols;
-        
-        const maxGridRows = 12;
-        this.gridHeight = this.cellSize * maxGridRows;
+        this.gridHeight = this.cellSize * this.gridRows;
         this.gridStartX = (this.canvas.width - this.gridWidth) / 2;
         this.gridStartY = padding + titleHeight + spacing;
         
         console.log('📐 Grid Dimensions:');
         console.log('  Canvas:', this.canvas.width, 'x', this.canvas.height, '| Mobile:', this.isMobile);
-        console.log('  Cell size:', this.cellSize, '| Grid:', this.gridWidth, 'x', this.gridHeight);
+        console.log('  Cell size:', this.cellSize, '| Grid:', this.gridWidth, 'x', this.gridHeight, '(' + this.gridRows + ' rows × ' + this.gridCols + ' cols)');
         console.log('  Grid at:', this.gridStartX, ',', this.gridStartY);
     }
 

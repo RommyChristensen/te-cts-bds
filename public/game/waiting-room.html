@@ -1140,12 +1140,25 @@
             if (!window.originalTeamOrder) {
                 window.originalTeamOrder = [...gameData.teams];
             }
+
+            console.log("gameProgress: " + JSON.stringify(window.gameProgress))
             
             gameData.teams.forEach((team, index) => {
                 const teamName = team.team_name;
                 const maxPlayers = team.player_count || 0;
                 const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : 'rank-other';
                 const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏅';
+                
+                // Get team completion time from game progress if available
+                let completionTimeDisplay = '-';
+                if (window.gameProgress && window.gameProgress.teamProgress && window.gameProgress.teamProgress[teamName]) {
+                    const teamProgress = window.gameProgress.teamProgress[teamName];
+                    if (teamProgress.completed && teamProgress.time) {
+                        // Convert milliseconds to seconds
+                        const seconds = (teamProgress.time / 1000).toFixed(2);
+                        completionTimeDisplay = `${seconds}s`;
+                    }
+                }
                 
                 const teamCard = document.createElement('div');
                 teamCard.className = 'team-ranking-card';
@@ -1156,6 +1169,7 @@
                     <div class="rank-position ${rankClass}" id="rank-${teamName.replace(/\s+/g, '-')}">${rankEmoji} #${index + 1}</div>
                     <div class="team-name">${teamName}</div>
                     <div class="team-players">${maxPlayers} players</div>
+                    <div class="team-completion-time" style="font-size: 0.9rem; color: #ffc107; margin: 0.5rem 0;">⏱️ Finished: ${completionTimeDisplay}</div>
                     <div class="reward-input">
                         <label>Reward:</label>
                         <input type="number" 
@@ -1438,6 +1452,9 @@
             if (!gameData) return;
             
             console.log('🎮 Updating game progress:', progressData);
+            
+            // Store game progress globally for use in ranking cards
+            window.gameProgress = progressData;
             
             // Show progress panel for admin
             if (isAdmin) {
@@ -1750,6 +1767,12 @@
         socket.on('game-progress', (data) => {
             console.log('🎮 Game progress update:', data);
             updateGameProgress(data);
+            
+            // Refresh ranking cards if they exist (to show updated completion times)
+            const rankingTeams = document.getElementById('rankingTeams');
+            if (rankingTeams && rankingTeams.children.length > 0) {
+                createRankingCards();
+            }
         });
 
         socket.on('timer-update', (data) => {

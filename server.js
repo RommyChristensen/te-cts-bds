@@ -695,13 +695,18 @@ io.on('connection', (socket) => {
       // Don't set game to inactive here - keep it active for result page
       // Only set inactive when admin closes the room
       
-      // Reset global game progress for this game and emit events
-      globalGameProgress.set(gameId, {});
+      // Get current game progress before resetting
+      const currentProgress = globalGameProgress.get(gameId) || {};
+      
+      // Emit final game progress with team data before resetting
       io.to(roomName).emit('game-progress', { 
         gameId: gameId,
         gameStatus: 'finished',
-        teamProgress: {}
+        teamProgress: currentProgress
       });
+      
+      // Reset global game progress for this game
+      globalGameProgress.set(gameId, {});
       
       io.to(roomName).emit('game-ended', { gameId: gameId });
       io.emit('game-activity', { type: 'game_ended', gameId: gameId });
