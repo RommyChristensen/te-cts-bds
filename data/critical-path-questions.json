@@ -1,0 +1,1060 @@
+{
+  "questions": [
+    {
+      "id": 1,
+      "team": 1,
+      "title": "Critical Path",
+      "description": "Build a complete website with multiple components",
+      "tasks": [
+        {
+          "code": "A",
+          "name": "Requirement Gathering",
+          "duration": 2,
+          "predecessors": []
+        },
+        {
+          "code": "B",
+          "name": "Database Schema Design",
+          "duration": 4,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "C",
+          "name": "UI-UX Mockup",
+          "duration": 3,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "D",
+          "name": "Api Development",
+          "duration": 5,
+          "predecessors": ["B"]
+        },
+        {
+          "code": "E",
+          "name": "Front End Implementation",
+          "duration": 8,
+          "predecessors": ["C"]
+        },
+        {
+          "code": "F",
+          "name": "Security Encription",
+          "duration": 2,
+          "predecessors": ["B", "C"]
+        },
+        {
+          "code": "G",
+          "name": "System Integration",
+          "duration": 7,
+          "predecessors": ["D", "E"]
+        },
+        {
+          "code": "H",
+          "name": "QA Bug Fixing",
+          "duration": 3,
+          "predecessors": ["F"]
+        },
+        {
+          "code": "I",
+          "name": "Load and Stress Test",
+          "duration": 4,
+          "predecessors": ["G"]
+        },
+        {
+          "code": "J",
+          "name": "User Documentation",
+          "duration": 5,
+          "predecessors": ["H"]
+        },
+        {
+          "code": "K",
+          "name": "Production Deployment",
+          "duration": 2,
+          "predecessors": ["I", "J"]
+        },
+        {
+          "code": "L",
+          "name": "Post Release Audit",
+          "duration": 1,
+          "predecessors": ["K"]
+        }
+      ],
+      "constraints": {
+        "maxParallel": 2,
+        "nonStop": true,
+        "zeroGap": true
+      },
+      "answer": ["A", "C", "E", "G", "I", "K", "L"],
+      "answerDuration": 27,
+      "explanation": "Critical path: A(2) -> C(3) -> E(8) -> G(7) -> I(4) -> K(2) -> L(1) = 27 time units"
+    },
+    {
+      "id": 1,
+      "team": 2,
+      "title": "Critical Path",
+      "description": "Build a complete website with multiple components",
+      "tasks": [
+        {
+          "code": "A",
+          "name": "Requirement Gathering",
+          "duration": 2,
+          "predecessors": []
+        },
+        {
+          "code": "B",
+          "name": "Database Schema Design",
+          "duration": 4,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "C",
+          "name": "UI-UX Mockup",
+          "duration": 3,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "D",
+          "name": "Api Development",
+          "duration": 5,
+          "predecessors": ["B"]
+        },
+        {
+          "code": "E",
+          "name": "Front End Implementation",
+          "duration": 8,
+          "predecessors": ["C"]
+        },
+        {
+          "code": "F",
+          "name": "Security Encription",
+          "duration": 2,
+          "predecessors": ["B", "C"]
+        },
+        {
+          "code": "G",
+          "name": "System Integration",
+          "duration": 7,
+          "predecessors": ["D", "E"]
+        },
+        {
+          "code": "H",
+          "name": "QA Bug Fixing",
+          "duration": 3,
+          "predecessors": ["F"]
+        },
+        {
+          "code": "I",
+          "name": "Load and Stress Test",
+          "duration": 4,
+          "predecessors": ["G"]
+        },
+        {
+          "code": "J",
+          "name": "User Documentation",
+          "duration": 5,
+          "predecessors": ["H"]
+        },
+        {
+          "code": "K",
+          "name": "Production Deployment",
+          "duration": 2,
+          "predecessors": ["I", "J"]
+        },
+        {
+          "code": "L",
+          "name": "Post Release Audit",
+          "duration": 1,
+          "predecessors": ["K"]
+        }
+      ],
+      "constraints": {
+        "maxParallel": 2,
+        "nonStop": true,
+        "zeroGap": true
+      },
+      "answer": ["A", "C", "E", "G", "I", "K", "L"],
+      "answerDuration": 27,
+      "explanation": "Critical path: A(2) -> C(3) -> E(8) -> G(7) -> I(4) -> K(2) -> L(1) = 27 time units"
+    },
+    {
+      "id": 1,
+      "team": 3,
+      "title": "Critical Path",
+      "description": "Build a complete website with multiple components",
+      "tasks": [
+        {
+          "code": "A",
+          "name": "Requirement Gathering",
+          "duration": 2,
+          "predecessors": []
+        },
+        {
+          "code": "B",
+          "name": "Database Schema Design",
+          "duration": 4,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "C",
+          "name": "UI-UX Mockup",
+          "duration": 3,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "D",
+          "name": "Api Development",
+          "duration": 5,
+          "predecessors": ["B"]
+        },
+        {
+          "code": "E",
+          "name": "Front End Implementation",
+          "duration": 8,
+          "predecessors": ["C"]
+        },
+        {
+          "code": "F",
+          "name": "Security Encription",
+          "duration": 2,
+          "predecessors": ["B", "C"]
+        },
+        {
+          "code": "G",
+          "name": "System Integration",
+          "duration": 7,
+          "predecessors": ["D", "E"]
+        },
+        {
+          "code": "H",
+          "name": "QA Bug Fixing",
+          "duration": 3,
+          "predecessors": ["F"]
+        },
+        {
+          "code": "I",
+          "name": "Load and Stress Test",
+          "duration": 4,
+          "predecessors": ["G"]
+        },
+        {
+          "code": "J",
+          "name": "User Documentation",
+          "duration": 5,
+          "predecessors": ["H"]
+        },
+        {
+          "code": "K",
+          "name": "Production Deployment",
+          "duration": 2,
+          "predecessors": ["I", "J"]
+        },
+        {
+          "code": "L",
+          "name": "Post Release Audit",
+          "duration": 1,
+          "predecessors": ["K"]
+        }
+      ],
+      "constraints": {
+        "maxParallel": 2,
+        "nonStop": true,
+        "zeroGap": true
+      },
+      "answer": ["A", "C", "E", "G", "I", "K", "L"],
+      "answerDuration": 27,
+      "explanation": "Critical path: A(2) -> C(3) -> E(8) -> G(7) -> I(4) -> K(2) -> L(1) = 27 time units"
+    },
+    {
+      "id": 1,
+      "team": 4,
+      "title": "Critical Path",
+      "description": "Build a complete website with multiple components",
+      "tasks": [
+        {
+          "code": "A",
+          "name": "Requirement Gathering",
+          "duration": 2,
+          "predecessors": []
+        },
+        {
+          "code": "B",
+          "name": "Database Schema Design",
+          "duration": 4,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "C",
+          "name": "UI-UX Mockup",
+          "duration": 3,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "D",
+          "name": "Api Development",
+          "duration": 5,
+          "predecessors": ["B"]
+        },
+        {
+          "code": "E",
+          "name": "Front End Implementation",
+          "duration": 8,
+          "predecessors": ["C"]
+        },
+        {
+          "code": "F",
+          "name": "Security Encription",
+          "duration": 2,
+          "predecessors": ["B", "C"]
+        },
+        {
+          "code": "G",
+          "name": "System Integration",
+          "duration": 7,
+          "predecessors": ["D", "E"]
+        },
+        {
+          "code": "H",
+          "name": "QA Bug Fixing",
+          "duration": 3,
+          "predecessors": ["F"]
+        },
+        {
+          "code": "I",
+          "name": "Load and Stress Test",
+          "duration": 4,
+          "predecessors": ["G"]
+        },
+        {
+          "code": "J",
+          "name": "User Documentation",
+          "duration": 5,
+          "predecessors": ["H"]
+        },
+        {
+          "code": "K",
+          "name": "Production Deployment",
+          "duration": 2,
+          "predecessors": ["I", "J"]
+        },
+        {
+          "code": "L",
+          "name": "Post Release Audit",
+          "duration": 1,
+          "predecessors": ["K"]
+        }
+      ],
+      "constraints": {
+        "maxParallel": 2,
+        "nonStop": true,
+        "zeroGap": true
+      },
+      "answer": ["A", "C", "E", "G", "I", "K", "L"],
+      "answerDuration": 27,
+      "explanation": "Critical path: A(2) -> C(3) -> E(8) -> G(7) -> I(4) -> K(2) -> L(1) = 27 time units"
+    },
+    {
+      "id": 1,
+      "team": 5,
+      "title": "Critical Path",
+      "description": "Build a complete website with multiple components",
+      "tasks": [
+        {
+          "code": "A",
+          "name": "Requirement Gathering",
+          "duration": 2,
+          "predecessors": []
+        },
+        {
+          "code": "B",
+          "name": "Database Schema Design",
+          "duration": 4,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "C",
+          "name": "UI-UX Mockup",
+          "duration": 3,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "D",
+          "name": "Api Development",
+          "duration": 5,
+          "predecessors": ["B"]
+        },
+        {
+          "code": "E",
+          "name": "Front End Implementation",
+          "duration": 8,
+          "predecessors": ["C"]
+        },
+        {
+          "code": "F",
+          "name": "Security Encription",
+          "duration": 2,
+          "predecessors": ["B", "C"]
+        },
+        {
+          "code": "G",
+          "name": "System Integration",
+          "duration": 7,
+          "predecessors": ["D", "E"]
+        },
+        {
+          "code": "H",
+          "name": "QA Bug Fixing",
+          "duration": 3,
+          "predecessors": ["F"]
+        },
+        {
+          "code": "I",
+          "name": "Load and Stress Test",
+          "duration": 4,
+          "predecessors": ["G"]
+        },
+        {
+          "code": "J",
+          "name": "User Documentation",
+          "duration": 5,
+          "predecessors": ["H"]
+        },
+        {
+          "code": "K",
+          "name": "Production Deployment",
+          "duration": 2,
+          "predecessors": ["I", "J"]
+        },
+        {
+          "code": "L",
+          "name": "Post Release Audit",
+          "duration": 1,
+          "predecessors": ["K"]
+        }
+      ],
+      "constraints": {
+        "maxParallel": 2,
+        "nonStop": true,
+        "zeroGap": true
+      },
+      "answer": ["A", "C", "E", "G", "I", "K", "L"],
+      "answerDuration": 27,
+      "explanation": "Critical path: A(2) -> C(3) -> E(8) -> G(7) -> I(4) -> K(2) -> L(1) = 27 time units"
+    },
+    {
+      "id": 1,
+      "team": 6,
+      "title": "Critical Path",
+      "description": "Build a complete website with multiple components",
+      "tasks": [
+        {
+          "code": "A",
+          "name": "Requirement Gathering",
+          "duration": 2,
+          "predecessors": []
+        },
+        {
+          "code": "B",
+          "name": "Database Schema Design",
+          "duration": 4,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "C",
+          "name": "UI-UX Mockup",
+          "duration": 3,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "D",
+          "name": "Api Development",
+          "duration": 5,
+          "predecessors": ["B"]
+        },
+        {
+          "code": "E",
+          "name": "Front End Implementation",
+          "duration": 8,
+          "predecessors": ["C"]
+        },
+        {
+          "code": "F",
+          "name": "Security Encription",
+          "duration": 2,
+          "predecessors": ["B", "C"]
+        },
+        {
+          "code": "G",
+          "name": "System Integration",
+          "duration": 7,
+          "predecessors": ["D", "E"]
+        },
+        {
+          "code": "H",
+          "name": "QA Bug Fixing",
+          "duration": 3,
+          "predecessors": ["F"]
+        },
+        {
+          "code": "I",
+          "name": "Load and Stress Test",
+          "duration": 4,
+          "predecessors": ["G"]
+        },
+        {
+          "code": "J",
+          "name": "User Documentation",
+          "duration": 5,
+          "predecessors": ["H"]
+        },
+        {
+          "code": "K",
+          "name": "Production Deployment",
+          "duration": 2,
+          "predecessors": ["I", "J"]
+        },
+        {
+          "code": "L",
+          "name": "Post Release Audit",
+          "duration": 1,
+          "predecessors": ["K"]
+        }
+      ],
+      "constraints": {
+        "maxParallel": 2,
+        "nonStop": true,
+        "zeroGap": true
+      },
+      "answer": ["A", "C", "E", "G", "I", "K", "L"],
+      "answerDuration": 27,
+      "explanation": "Critical path: A(2) -> C(3) -> E(8) -> G(7) -> I(4) -> K(2) -> L(1) = 27 time units"
+    },
+    {
+      "id": 1,
+      "team": 7,
+      "title": "Critical Path",
+      "description": "Build a complete website with multiple components",
+      "tasks": [
+        {
+          "code": "A",
+          "name": "Requirement Gathering",
+          "duration": 2,
+          "predecessors": []
+        },
+        {
+          "code": "B",
+          "name": "Database Schema Design",
+          "duration": 4,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "C",
+          "name": "UI-UX Mockup",
+          "duration": 3,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "D",
+          "name": "Api Development",
+          "duration": 5,
+          "predecessors": ["B"]
+        },
+        {
+          "code": "E",
+          "name": "Front End Implementation",
+          "duration": 8,
+          "predecessors": ["C"]
+        },
+        {
+          "code": "F",
+          "name": "Security Encription",
+          "duration": 2,
+          "predecessors": ["B", "C"]
+        },
+        {
+          "code": "G",
+          "name": "System Integration",
+          "duration": 7,
+          "predecessors": ["D", "E"]
+        },
+        {
+          "code": "H",
+          "name": "QA Bug Fixing",
+          "duration": 3,
+          "predecessors": ["F"]
+        },
+        {
+          "code": "I",
+          "name": "Load and Stress Test",
+          "duration": 4,
+          "predecessors": ["G"]
+        },
+        {
+          "code": "J",
+          "name": "User Documentation",
+          "duration": 5,
+          "predecessors": ["H"]
+        },
+        {
+          "code": "K",
+          "name": "Production Deployment",
+          "duration": 2,
+          "predecessors": ["I", "J"]
+        },
+        {
+          "code": "L",
+          "name": "Post Release Audit",
+          "duration": 1,
+          "predecessors": ["K"]
+        }
+      ],
+      "constraints": {
+        "maxParallel": 2,
+        "nonStop": true,
+        "zeroGap": true
+      },
+      "answer": ["A", "C", "E", "G", "I", "K", "L"],
+      "answerDuration": 27,
+      "explanation": "Critical path: A(2) -> C(3) -> E(8) -> G(7) -> I(4) -> K(2) -> L(1) = 27 time units"
+    },
+    {
+      "id": 1,
+      "team": 8,
+      "title": "Critical Path",
+      "description": "Build a complete website with multiple components",
+      "tasks": [
+        {
+          "code": "A",
+          "name": "Requirement Gathering",
+          "duration": 2,
+          "predecessors": []
+        },
+        {
+          "code": "B",
+          "name": "Database Schema Design",
+          "duration": 4,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "C",
+          "name": "UI-UX Mockup",
+          "duration": 3,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "D",
+          "name": "Api Development",
+          "duration": 5,
+          "predecessors": ["B"]
+        },
+        {
+          "code": "E",
+          "name": "Front End Implementation",
+          "duration": 8,
+          "predecessors": ["C"]
+        },
+        {
+          "code": "F",
+          "name": "Security Encription",
+          "duration": 2,
+          "predecessors": ["B", "C"]
+        },
+        {
+          "code": "G",
+          "name": "System Integration",
+          "duration": 7,
+          "predecessors": ["D", "E"]
+        },
+        {
+          "code": "H",
+          "name": "QA Bug Fixing",
+          "duration": 3,
+          "predecessors": ["F"]
+        },
+        {
+          "code": "I",
+          "name": "Load and Stress Test",
+          "duration": 4,
+          "predecessors": ["G"]
+        },
+        {
+          "code": "J",
+          "name": "User Documentation",
+          "duration": 5,
+          "predecessors": ["H"]
+        },
+        {
+          "code": "K",
+          "name": "Production Deployment",
+          "duration": 2,
+          "predecessors": ["I", "J"]
+        },
+        {
+          "code": "L",
+          "name": "Post Release Audit",
+          "duration": 1,
+          "predecessors": ["K"]
+        }
+      ],
+      "constraints": {
+        "maxParallel": 2,
+        "nonStop": true,
+        "zeroGap": true
+      },
+      "answer": ["A", "C", "E", "G", "I", "K", "L"],
+      "answerDuration": 27,
+      "explanation": "Critical path: A(2) -> C(3) -> E(8) -> G(7) -> I(4) -> K(2) -> L(1) = 27 time units"
+    },
+    {
+      "id": 1,
+      "team": 9,
+      "title": "Critical Path",
+      "description": "Build a complete website with multiple components",
+      "tasks": [
+        {
+          "code": "A",
+          "name": "Requirement Gathering",
+          "duration": 2,
+          "predecessors": []
+        },
+        {
+          "code": "B",
+          "name": "Database Schema Design",
+          "duration": 4,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "C",
+          "name": "UI-UX Mockup",
+          "duration": 3,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "D",
+          "name": "Api Development",
+          "duration": 5,
+          "predecessors": ["B"]
+        },
+        {
+          "code": "E",
+          "name": "Front End Implementation",
+          "duration": 8,
+          "predecessors": ["C"]
+        },
+        {
+          "code": "F",
+          "name": "Security Encription",
+          "duration": 2,
+          "predecessors": ["B", "C"]
+        },
+        {
+          "code": "G",
+          "name": "System Integration",
+          "duration": 7,
+          "predecessors": ["D", "E"]
+        },
+        {
+          "code": "H",
+          "name": "QA Bug Fixing",
+          "duration": 3,
+          "predecessors": ["F"]
+        },
+        {
+          "code": "I",
+          "name": "Load and Stress Test",
+          "duration": 4,
+          "predecessors": ["G"]
+        },
+        {
+          "code": "J",
+          "name": "User Documentation",
+          "duration": 5,
+          "predecessors": ["H"]
+        },
+        {
+          "code": "K",
+          "name": "Production Deployment",
+          "duration": 2,
+          "predecessors": ["I", "J"]
+        },
+        {
+          "code": "L",
+          "name": "Post Release Audit",
+          "duration": 1,
+          "predecessors": ["K"]
+        }
+      ],
+      "constraints": {
+        "maxParallel": 2,
+        "nonStop": true,
+        "zeroGap": true
+      },
+      "answer": ["A", "C", "E", "G", "I", "K", "L"],
+      "answerDuration": 27,
+      "explanation": "Critical path: A(2) -> C(3) -> E(8) -> G(7) -> I(4) -> K(2) -> L(1) = 27 time units"
+    },
+    {
+      "id": 1,
+      "team": 10,
+      "title": "Critical Path",
+      "description": "Build a complete website with multiple components",
+      "tasks": [
+        {
+          "code": "A",
+          "name": "Requirement Gathering",
+          "duration": 2,
+          "predecessors": []
+        },
+        {
+          "code": "B",
+          "name": "Database Schema Design",
+          "duration": 4,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "C",
+          "name": "UI-UX Mockup",
+          "duration": 3,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "D",
+          "name": "Api Development",
+          "duration": 5,
+          "predecessors": ["B"]
+        },
+        {
+          "code": "E",
+          "name": "Front End Implementation",
+          "duration": 8,
+          "predecessors": ["C"]
+        },
+        {
+          "code": "F",
+          "name": "Security Encription",
+          "duration": 2,
+          "predecessors": ["B", "C"]
+        },
+        {
+          "code": "G",
+          "name": "System Integration",
+          "duration": 7,
+          "predecessors": ["D", "E"]
+        },
+        {
+          "code": "H",
+          "name": "QA Bug Fixing",
+          "duration": 3,
+          "predecessors": ["F"]
+        },
+        {
+          "code": "I",
+          "name": "Load and Stress Test",
+          "duration": 4,
+          "predecessors": ["G"]
+        },
+        {
+          "code": "J",
+          "name": "User Documentation",
+          "duration": 5,
+          "predecessors": ["H"]
+        },
+        {
+          "code": "K",
+          "name": "Production Deployment",
+          "duration": 2,
+          "predecessors": ["I", "J"]
+        },
+        {
+          "code": "L",
+          "name": "Post Release Audit",
+          "duration": 1,
+          "predecessors": ["K"]
+        }
+      ],
+      "constraints": {
+        "maxParallel": 2,
+        "nonStop": true,
+        "zeroGap": true
+      },
+      "answer": ["A", "C", "E", "G", "I", "K", "L"],
+      "answerDuration": 27,
+      "explanation": "Critical path: A(2) -> C(3) -> E(8) -> G(7) -> I(4) -> K(2) -> L(1) = 27 time units"
+    },
+    {
+      "id": 1,
+      "team": 11,
+      "title": "Critical Path",
+      "description": "Build a complete website with multiple components",
+      "tasks": [
+        {
+          "code": "A",
+          "name": "Requirement Gathering",
+          "duration": 2,
+          "predecessors": []
+        },
+        {
+          "code": "B",
+          "name": "Database Schema Design",
+          "duration": 4,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "C",
+          "name": "UI-UX Mockup",
+          "duration": 3,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "D",
+          "name": "Api Development",
+          "duration": 5,
+          "predecessors": ["B"]
+        },
+        {
+          "code": "E",
+          "name": "Front End Implementation",
+          "duration": 8,
+          "predecessors": ["C"]
+        },
+        {
+          "code": "F",
+          "name": "Security Encription",
+          "duration": 2,
+          "predecessors": ["B", "C"]
+        },
+        {
+          "code": "G",
+          "name": "System Integration",
+          "duration": 7,
+          "predecessors": ["D", "E"]
+        },
+        {
+          "code": "H",
+          "name": "QA Bug Fixing",
+          "duration": 3,
+          "predecessors": ["F"]
+        },
+        {
+          "code": "I",
+          "name": "Load and Stress Test",
+          "duration": 4,
+          "predecessors": ["G"]
+        },
+        {
+          "code": "J",
+          "name": "User Documentation",
+          "duration": 5,
+          "predecessors": ["H"]
+        },
+        {
+          "code": "K",
+          "name": "Production Deployment",
+          "duration": 2,
+          "predecessors": ["I", "J"]
+        },
+        {
+          "code": "L",
+          "name": "Post Release Audit",
+          "duration": 1,
+          "predecessors": ["K"]
+        }
+      ],
+      "constraints": {
+        "maxParallel": 2,
+        "nonStop": true,
+        "zeroGap": true
+      },
+      "answer": ["A", "C", "E", "G", "I", "K", "L"],
+      "answerDuration": 27,
+      "explanation": "Critical path: A(2) -> C(3) -> E(8) -> G(7) -> I(4) -> K(2) -> L(1) = 27 time units"
+    },
+    {
+      "id": 1,
+      "team": 12,
+      "title": "Critical Path",
+      "description": "Build a complete website with multiple components",
+      "tasks": [
+        {
+          "code": "A",
+          "name": "Requirement Gathering",
+          "duration": 2,
+          "predecessors": []
+        },
+        {
+          "code": "B",
+          "name": "Database Schema Design",
+          "duration": 4,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "C",
+          "name": "UI-UX Mockup",
+          "duration": 3,
+          "predecessors": ["A"]
+        },
+        {
+          "code": "D",
+          "name": "Api Development",
+          "duration": 5,
+          "predecessors": ["B"]
+        },
+        {
+          "code": "E",
+          "name": "Front End Implementation",
+          "duration": 8,
+          "predecessors": ["C"]
+        },
+        {
+          "code": "F",
+          "name": "Security Encription",
+          "duration": 2,
+          "predecessors": ["B", "C"]
+        },
+        {
+          "code": "G",
+          "name": "System Integration",
+          "duration": 7,
+          "predecessors": ["D", "E"]
+        },
+        {
+          "code": "H",
+          "name": "QA Bug Fixing",
+          "duration": 3,
+          "predecessors": ["F"]
+        },
+        {
+          "code": "I",
+          "name": "Load and Stress Test",
+          "duration": 4,
+          "predecessors": ["G"]
+        },
+        {
+          "code": "J",
+          "name": "User Documentation",
+          "duration": 5,
+          "predecessors": ["H"]
+        },
+        {
+          "code": "K",
+          "name": "Production Deployment",
+          "duration": 2,
+          "predecessors": ["I", "J"]
+        },
+        {
+          "code": "L",
+          "name": "Post Release Audit",
+          "duration": 1,
+          "predecessors": ["K"]
+        }
+      ],
+      "constraints": {
+        "maxParallel": 2,
+        "nonStop": true,
+        "zeroGap": true
+      },
+      "answer": ["A", "C", "E", "G", "I", "K", "L"],
+      "answerDuration": 27,
+      "explanation": "Critical path: A(2) -> C(3) -> E(8) -> G(7) -> I(4) -> K(2) -> L(1) = 27 time units"
+    }
+  ]
+}

@@ -34,5 +34,25 @@
     "fileName": "test-game.js",
     "status": "inactive",
     "id": "1779248808937"
+  },
+  {
+    "name": "The Critical Path",
+    "description": "Project Management Challenge - Find the critical path by arranging tasks",
+    "duration": 10,
+    "teams": [
+      "Team 1",
+      "Team 2",
+      "Team 3"
+    ],
+    "teamPlayers": {
+      "Team 1": 1,
+      "Team 2": 1,
+      "Team 3": 1
+    },
+    "rewardCoins": 100,
+    "gameUrl": "/game/critical-path",
+    "fileName": "critical-path.js",
+    "status": "inactive",
+    "id": "1779349200000"
   }
 ]
