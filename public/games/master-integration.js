@@ -357,20 +357,40 @@ class GameInstance {
   }
   
   evaluateExpression() {
-    // Build expression from selectedElements
+    // Build expression from selectedElements without spaces
     let expression = '';
     for (let el of this.selectedElements) {
-      if (typeof el === 'number') {
-        expression += el;
-      } else {
-        expression += el;
-      }
+      expression += el;
     }
     
-    console.log('Evaluating expression:', expression);
+    console.log('Raw expression:', expression);
+    console.log('Selected elements:', this.selectedElements);
+    
+    // Remove all spaces
+    expression = expression.replace(/\s+/g, '');
+    console.log('Expression without spaces:', expression);
+    
+    // Validate expression before evaluating
+    if (!expression || expression.trim() === '') {
+      throw new Error('Empty expression');
+    }
+    
+    // Replace × with * and ÷ with / for JavaScript evaluation
+    const jsExpression = expression.replace(/×/g, '*').replace(/÷/g, '/');
+    console.log('JavaScript expression:', jsExpression);
+    
+    // Validate JavaScript expression syntax
+    try {
+      // Test if expression is valid by trying to parse it
+      Function('"use strict"; return (' + jsExpression + ')');
+    } catch (e) {
+      console.error('Invalid expression syntax:', jsExpression, e);
+      throw new Error('Invalid expression: ' + e.message);
+    }
     
     // Evaluate using Function constructor (safe for math expressions)
-    const result = Function('"use strict"; return (' + expression + ')')();
+    const result = Function('"use strict"; return (' + jsExpression + ')')();
+    console.log('Expression result:', result);
     return result;
   }
   
