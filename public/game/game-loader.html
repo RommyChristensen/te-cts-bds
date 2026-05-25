@@ -297,6 +297,52 @@
             return params.get('gameId');
         }
 
+        // Flag to track if game has loaded
+        let gameLoaded = false;
+
+        // Prevent page refresh and navigation when game is active
+        function preventPageRefresh() {
+            // Prevent F5 and Ctrl+R refresh
+            document.addEventListener('keydown', (e) => {
+                if (gameLoaded && (
+                    (e.key === 'F5') || 
+                    (e.ctrlKey && e.key === 'r') || 
+                    (e.metaKey && e.key === 'r')
+                )) {
+                    e.preventDefault();
+                    console.log('🚫 Refresh attempt blocked');
+                    return false;
+                }
+            });
+
+            // Prevent back button
+            window.addEventListener('popstate', (e) => {
+                if (gameLoaded) {
+                    e.preventDefault();
+                    console.log('🚫 Back button attempt blocked');
+                    window.history.pushState(null, null, window.location.href);
+                }
+            });
+
+            // Warn on page unload (close tab, navigate away, etc)
+            window.addEventListener('beforeunload', (e) => {
+                if (gameLoaded) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                    console.log('🚫 Page unload attempt blocked');
+                    return false;
+                }
+            });
+
+            // Block right-click context menu (optional - to prevent inspect element)
+            document.addEventListener('contextmenu', (e) => {
+                if (gameLoaded) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
             try {
@@ -322,8 +368,15 @@
                     return;
                 }
 
+                // Setup prevent refresh before loading game
+                preventPageRefresh();
+
                 // Load game
                 await loadGame();
+
+                // Mark game as loaded after successful load
+                gameLoaded = true;
+                console.log('✅ Game loaded - refresh prevention activated');
 
             } catch (error) {
                 console.error('Initialization error:', error);

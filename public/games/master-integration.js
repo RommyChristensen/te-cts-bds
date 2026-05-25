@@ -59,7 +59,7 @@ class GameInstance {
     
     if (this.isMobile) {
       this.canvas.width = Math.min(window.innerWidth - 20, 400);
-      this.canvas.height = Math.min(window.innerHeight - 200, 600);
+      this.canvas.height = 600;
     } else {
       this.canvas.width = 900;
       this.canvas.height = 800;

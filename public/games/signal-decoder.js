@@ -503,7 +503,7 @@ class GameInstance {
         
         // Check if answer is correct
         const isCorrect = this.userAnswer === this.currentQuestion.answer;
-        
+
         // Notify server about game progress
         this.socket.emit('game-progress', {
             gameId: this.gameId,
@@ -727,13 +727,13 @@ class GameInstance {
                 const userDigit = this.submittedAnswer ? this.submittedAnswer[i] : '';
                 
                 if (userDigit === correctDigit) {
-                    this.ctx.fillStyle = '#4CAF50';
+                    this.ctx.fillStyle = '#666';
                 } else if (userDigit) {
-                    this.ctx.fillStyle = '#F44336';
+                    this.ctx.fillStyle = '#666';
                 } else {
                     this.ctx.fillStyle = '#666';
                 }
-                this.ctx.fillText(correctDigit, digitX, boxY + 40);
+                this.ctx.fillText("_", digitX, boxY + 40);
             } else {
                 this.ctx.fillStyle = digit === '_' ? '#666' : '#FFF';
                 this.ctx.fillText(digit, digitX, boxY + 40);

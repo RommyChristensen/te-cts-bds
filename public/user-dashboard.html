@@ -840,6 +840,9 @@
                     return;
                 }
 
+                // Sort by currency from highest to lowest
+                const sortedStandings = standings.sort((a, b) => (b.currency || 0) - (a.currency || 0));
+
                 const table = `
                     <table class="standings-table">
                         <thead>
@@ -851,7 +854,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${standings.map((player, index) => `
+                            ${sortedStandings.map((player, index) => `
                                 <tr>
                                     <td><span class="rank-badge rank-${index < 3 ? index + 1 : 'other'}">#${index + 1}</span></td>
                                     <td>${player.nama}</td>
