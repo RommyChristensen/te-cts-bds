@@ -1,67 +1,67 @@
 [
   {
     "team": "Team 1",
-    "numbers": [125, 75, 50],
-    "target": 100
+    "numbers": [284, 542, 259],
+    "target": 66822
   },
   {
     "team": "Team 2",
-    "numbers": [200, 150, 100],
-    "target": 250
+    "numbers": [513, 814, 239],
+    "target": 71939
   },
   {
     "team": "Team 3",
-    "numbers": [300, 100, 50],
-    "target": 350
+    "numbers": [679, 428, 289],
+    "target": 94381
   },
   {
     "team": "Team 4",
-    "numbers": [250, 125, 25],
-    "target": 225
+    "numbers": [305, 125, 239],
+    "target": 34770
   },
   {
     "team": "Team 5",
-    "numbers": [180, 120, 60],
-    "target": 240
+    "numbers": [421, 164, 320],
+    "target": 16564
   },
   {
     "team": "Team 6",
-    "numbers": [400, 200, 100],
-    "target": 300
+    "numbers": [867, 832, 280],
+    "target": 488384
   },
   {
     "team": "Team 7",
-    "numbers": [150, 100, 50],
-    "target": 200
+    "numbers": [930, 516, 275],
+    "target": 113850
   },
   {
     "team": "Team 8",
-    "numbers": [320, 160, 80],
-    "target": 240
+    "numbers": [752, 286, 310],
+    "target": 144460
   },
   {
     "team": "Team 9",
-    "numbers": [500, 250, 125],
-    "target": 375
+    "numbers": [146, 265, 269],
+    "target": 32595
   },
   {
     "team": "Team 10",
-    "numbers": [280, 140, 70],
-    "target": 210
+    "numbers": [598, 843, 335],
+    "target": 82075
   },
   {
     "team": "Team 11",
-    "numbers": [360, 180, 90],
-    "target": 450
+    "numbers": [237, 173, 286],
+    "target": 26781
   },
   {
     "team": "Team 12",
-    "numbers": [420, 210, 105],
-    "target": 315
+    "numbers": [601, 768, 250],
+    "target": 41750
   },
   {
     "team": "Team 0",
     "numbers": [100, 50, 25],
-    "target": 150
+    "target": 175
   }
 ]
