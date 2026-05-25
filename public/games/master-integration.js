@@ -165,8 +165,17 @@ class GameInstance {
       console.log('🎁 Rewards data:', this.rewardsData);
       
       try {
+        // Format rewards data for result page (same format as waiting-room)
+        const resultsData = {
+          rewards: this.rewardsData.rewards || {},
+          totalDistributed: this.rewardsData.totalDistributed || 0,
+          players: this.rewardsData.players || []
+        };
+        
+        console.log('📊 Formatted results data:', resultsData);
+        
         // Encode rewards data as URL parameter
-        const encodedData = btoa(JSON.stringify(this.rewardsData));
+        const encodedData = btoa(JSON.stringify(resultsData));
         let resultUrl = `/game/result?results=${encodedData}`;
         
         // Add gameId to URL
@@ -175,6 +184,7 @@ class GameInstance {
         }
         
         console.log('🔗 Redirecting to:', resultUrl);
+        console.log('🔗 Full URL:', window.location.origin + resultUrl);
         
         // Redirect immediately
         window.location.href = resultUrl;
@@ -185,6 +195,7 @@ class GameInstance {
         if (this.gameId) {
           fallbackUrl += `?gameId=${this.gameId}`;
         }
+        console.log('🔗 Fallback URL:', fallbackUrl);
         window.location.href = fallbackUrl;
       }
     }
