@@ -560,6 +560,9 @@ class GameInstance {
         // Draw answer input
         this.drawAnswerInput();
         
+        // Draw hint
+        this.drawHint();
+        
         // Instructions
         this.ctx.fillStyle = '#FFF';
         this.ctx.font = `${this.isMobile ? 10 : 14}px Arial`;
@@ -641,6 +644,18 @@ class GameInstance {
         this.ctx.font = `bold ${this.isMobile ? 18 : 32}px monospace`;
         this.ctx.textAlign = 'center';
         this.ctx.fillText(this.userAnswer || '_', boxX + boxWidth / 2, boxY + boxHeight / 2 + 8);
+    }
+
+    drawHint() {
+        const hintFontSize = this.isMobile ? 10 : 14;
+        const hintY = this.isMobile ? this.canvas.height - 350 : this.canvas.height - 250;
+        
+        this.ctx.fillStyle = '#FFC107';
+        this.ctx.font = `${hintFontSize}px Arial`;
+        this.ctx.textAlign = 'center';
+        
+        this.ctx.fillText('💡 Hint: Formula Pattern', this.canvas.width / 2, hintY);
+        this.ctx.fillText('aₙ = aₙ₋₁ + aₙ₋₂ + (C × n) + K', this.canvas.width / 2, hintY + (this.isMobile ? 12 : 16));
     }
 
     drawFinishedScreen() {
